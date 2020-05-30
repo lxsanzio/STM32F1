@@ -1,0 +1,6 @@
+Servo.c:9:6:movNopX	4	static
+Servo.c:13:6:movNopY	4	static
+Servo.c:19:6:movAxisXplus	4	static
+Servo.c:27:6:movAxisXminus	4	static
+Servo.c:34:6:movAxisYplus	4	static
+Servo.c:41:6:movAxisYminus	4	static

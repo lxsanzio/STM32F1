@@ -1,0 +1,70 @@
+11:06:16 **** Incremental Build of configuration Debug for project STM32F1_Joystick_v1 ****
+make -j4 all 
+arm-none-eabi-gcc "../Core/Src/Task/Servo.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F103xB -DDEBUG -c -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Core/Src/Task/Servo.d" -MT"Core/Src/Task/Servo.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/Task/Servo.o"
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F103xB -DDEBUG -c -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc "../Core/Src/stm32f1xx_hal_msp.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F103xB -DDEBUG -c -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Core/Src/stm32f1xx_hal_msp.d" -MT"Core/Src/stm32f1xx_hal_msp.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/stm32f1xx_hal_msp.o"
+arm-none-eabi-gcc "../Core/Src/stm32f1xx_it.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F103xB -DDEBUG -c -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Core/Src/stm32f1xx_it.d" -MT"Core/Src/stm32f1xx_it.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/stm32f1xx_it.o"
+In file included from ../Core/Inc/main.h:33:0,
+                 from ../Core/Src/main.c:22:
+../Core/Src/main.c: In function 'main':
+../Core/Inc/Servo.h:10:14: error: expected ')' before ';' token
+ #define i  75;
+              ^
+../Core/Src/main.c:146:9: note: in expansion of macro 'i'
+      if(i >= 125) htim2.Instance->CCR1 = i;
+         ^
+../Core/Src/main.c:147:6: error: expected '}' before 'else'
+      else {
+      ^~~~
+In file included from ../Core/Inc/main.h:33:0,
+                 from ../Core/Src/main.c:22:
+../Core/Inc/Servo.h:10:12: warning: statement with no effect [-Wunused-value]
+ #define i  75;
+            ^
+../Core/Src/main.c:148:7: note: in expansion of macro 'i'
+       i ++;
+       ^
+../Core/Src/main.c:148:11: error: expected expression before ';' token
+       i ++;
+           ^
+In file included from ../Core/Inc/main.h:33:0,
+                 from ../Core/Src/main.c:22:
+../Core/Inc/Servo.h:10:14: error: expected ')' before ';' token
+ #define i  75;
+              ^
+../Core/Src/main.c:157:9: note: in expansion of macro 'i'
+      if(i <= 25) htim2.Instance->CCR1 = i;
+         ^
+../Core/Src/main.c:158:6: error: expected '}' before 'else'
+      else {
+      ^~~~
+In file included from ../Core/Inc/main.h:33:0,
+                 from ../Core/Src/main.c:22:
+../Core/Inc/Servo.h:10:12: warning: statement with no effect [-Wunused-value]
+ #define i  75;
+            ^
+../Core/Src/main.c:159:7: note: in expansion of macro 'i'
+       i --;
+       ^
+../Core/Src/main.c:159:11: error: expected expression before ';' token
+       i --;
+           ^
+../Core/Src/main.c: At top level:
+../Core/Src/main.c:164:5: error: expected identifier or '(' before 'if'
+     if ((VR[1]>=4000))        //Representa movimientos que suman en Y: htim3
+     ^~
+../Core/Src/main.c:175:5: error: expected identifier or '(' before 'if'
+     if ((VR[1]<=800))        //Representa movimientos que restan en Y:htim3
+     ^~
+../Core/Src/main.c:191:3: error: expected identifier or '(' before '}' token
+   }
+   ^
+../Core/Src/main.c:193:1: error: expected identifier or '(' before '}' token
+ }
+ ^
+make: *** [Core/Src/subdir.mk:33: Core/Src/main.o] Error 1
+make: *** Waiting for unfinished jobs....
+"make -j4 all" terminated with exit code 2. Build might be incomplete.
+
+11:06:17 Build Failed. 12 errors, 2 warnings. (took 1s.170ms)
+
