@@ -110,8 +110,8 @@ int main(void)
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);		// Se asocia al eje Y
 
 
-  htim2.Instance->CCR1 = i;
-  htim3.Instance->CCR2 = j;
+//  htim2.Instance->CCR1 = i;
+//  htim3.Instance->CCR2 = j;
   /* USER CODE END 2 */
 
   /* Infinite loop */

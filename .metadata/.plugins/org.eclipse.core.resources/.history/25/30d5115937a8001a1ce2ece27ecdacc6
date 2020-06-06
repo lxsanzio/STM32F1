@@ -47,7 +47,7 @@ DMA_HandleTypeDef hdma_adc1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 
-
+extern uint32_t VR[2];
 
 
 /* USER CODE BEGIN PV */
@@ -67,8 +67,8 @@ static void MX_TIM3_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint32_t VR[2];
-uint16_t i = 75, j = 75;
+uint32_t VR[2];            Esta variable se llevo al header
+uint16_t i = 75, j = 75;   Estas variables se llevan al header
 /* USER CODE END 0 */
 
 /**
