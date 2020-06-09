@@ -55,10 +55,21 @@ uint16_t VR[2]; 			//Variable usada para el ADC input del joystick X e Y
  */
 //char vX;
 //char vY;
-
+/*
+ *
+ * 					LLEVAR PARA FUNCION JOYSTICK
+ *
+ *
+ */
 enum sServo{sAdvance, sStop, sBack};		//variable enumerada para estado de movimiento de servo
 											// avanza, no se mueve o retrocede
 
+
+/*
+ *
+ * 					LO DE ARRIBA!!!!!!!!!
+ *
+ */
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -77,7 +88,7 @@ static void MX_USART1_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-void stateJoystick(void);
+
 
 /* USER CODE END 0 */
 
@@ -124,8 +135,8 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  stateJoystick();
-    /* USER CODE BEGIN 3 */
+//	  stateJoystick();
+  /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
