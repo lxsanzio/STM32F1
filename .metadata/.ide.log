@@ -2802,3 +2802,9 @@
 2020-06-06 20:22:50,786 [INFO] ProjectBuilder:2894 - Time for Generating toolchain IDE Files: 2920mS.
 2020-06-06 20:22:50,786 [INFO] ProjectBuilder:1878 - Time for Copy CMSIS : 0mS.
 2020-06-06 20:22:50,787 [INFO] ProjectBuilder:1878 - Time for Copy CMSIS : 0mS.
+2020-06-08 16:11:49,913 [INFO] Activator:176 - 
+
+
+2020-06-08 16:11:49,917 [INFO] Activator:177 - !SESSION log4j initialized
+2020-06-08 16:12:26,103 [INFO] RetryExec:97 - I/O exception (org.apache.http.NoHttpResponseException) caught when processing request to {}->http://download.eclipse.org:80: The target server failed to respond
+2020-06-08 16:12:26,114 [INFO] RetryExec:113 - Retrying request to {}->http://download.eclipse.org:80

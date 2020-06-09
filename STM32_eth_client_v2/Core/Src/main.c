@@ -49,8 +49,16 @@ SPI_HandleTypeDef hspi1;
 UART_HandleTypeDef huart1;
 
 uint16_t VR[2]; 			//Variable usada para el ADC input del joystick X e Y
-char vX[2];
-char vY[2];
+
+/*
+ * comenta esta parte para implementar una variable de tipo constante enumerada
+ */
+//char vX;
+//char vY;
+
+enum sServo{sAdvance, sStop, sBack};		//variable enumerada para estado de movimiento de servo
+											// avanza, no se mueve o retrocede
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -325,61 +333,7 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-void stateJoystick(void)
-{
-	  if ((VR[0]>=2000) && (VR[0]<=3000))				//Representa si el Joystick no se mueve
-	   {
-//		  htim2.Instance->CCR1 = i;						//Esta sentencia es para PWM salida a servo
-		  vX = m1;
-	   }
 
-	   if ((VR[1]>=2000) && (VR[1]<=3000))				//Representa si el joystick no se mueve
-	   {
-//		   htim3.Instance->CCR2 = j;					//Esta sentencia es para PWM salida a servo
-		   vY = m1;		//m1 indica no movimiento
-	   }
-
-	   if ((VR[0]>=4000))								//Representa movimientos que suman en X: htim2
-	   {
-//		   if(i >= 125) htim2.Instance->CCR1 = i;
-//		   else {
-//			   i ++;
-//			   htim2.Instance->CCR1 = i; 					//Esta sentencia es para PWM salida a servo
-//		   }
-		   vX = m2; 		//m2 indica movimiento para un lado
-	   }
-
-	   if ((VR[0]<=800))								//Representa movimientos que restan en X: htim2
-	   {
-//		   if(i <= 25) htim2.Instance->CCR1 = i;
-//		   else {
-//			   i --;
-//			   htim2.Instance->CCR1 = i;					//Esta sentencia es para PWM salida a servo
-//		   }
-		   vX = m0;		//m0 indica movimiento para otro lado
-	   }
-
-	   if ((VR[1]>=4000))								//Representa movimientos que suman en Y: htim3
-	   {
-//		   if(j >= 125) htim3.Instance->CCR2 = j;
-//		   else{
-//			   j++;
-//			   htim3.Instance->CCR2 = j;
-//		   }
-		   vY = m2;		//m1 indica movimiento para un lado
-	   }
-
-	   if ((VR[1]<=800))								//Representa movimientos que restan en Y:htim3
-	   {
-//		   if(j<= 25) htim3.Instance->CCR2 = j;
-//		   else{
-//			   j--;
-//			   htim3.Instance->CCR2 = j;
-//		   }
-		   vY = m0;		//el valor m0 indica movimiento para un lado
-	   }
-
-}
 
 /* USER CODE END 4 */
 
