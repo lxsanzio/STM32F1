@@ -48,28 +48,8 @@ SPI_HandleTypeDef hspi1;
 
 UART_HandleTypeDef huart1;
 
-uint16_t VR[2]; 			//Variable usada para el ADC input del joystick X e Y
+static bool estadoP = false;
 
-/*
- * comenta esta parte para implementar una variable de tipo constante enumerada
- */
-//char vX;
-//char vY;
-/*
- *
- * 					LLEVAR PARA FUNCION JOYSTICK
- *
- *
- */
-enum sServo{sAdvance, sStop, sBack};		//variable enumerada para estado de movimiento de servo
-											// avanza, no se mueve o retrocede
-
-
-/*
- *
- * 					LO DE ARRIBA!!!!!!!!!
- *
- */
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -88,6 +68,7 @@ static void MX_USART1_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+uint16_t VR[2];
 
 
 /* USER CODE END 0 */
@@ -99,8 +80,14 @@ static void MX_USART1_UART_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+	/*
+	 * VARIABLES PARA DEFINICION DE CONEXION TCP
+	 */
 
-  /* USER CODE END 1 */
+	uint8_t bufSize[] = {2, 2, 2, 2, 2, 2, 2, 2};
+	uint8_t socketnum = 0;
+	uint8_t serverIPP[4] = {192, 168, 2, 192};
+	/* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -126,7 +113,6 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  HAL_ADC_Start_DMA(&hadc1, VR, 2);		//inicia ADC mediante DMA
 
   /* USER CODE END 2 */
 
@@ -135,8 +121,11 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-//	  stateJoystick();
-  /* USER CODE BEGIN 3 */
+
+	  if(estadoP == true){
+		  stateJoystick(VR);
+	  }
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
@@ -145,8 +134,7 @@ int main(void)
   * @brief System Clock Configuration
   * @retval None
   */
-void SystemClock_Config(void)
-{
+void SystemClock_Config(void){
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
@@ -327,11 +315,23 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PC13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PA4 */
   GPIO_InitStruct.Pin = GPIO_PIN_4;
@@ -340,11 +340,59 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : PB12 PB13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_12|GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
 }
 
 /* USER CODE BEGIN 4 */
 
+/*
+ * @brief	Funcion Callback llamada de interrupción externa. El condicional sirve
+ * 			determina quien realiza la llamada. El GPIO_PIN_12 boton start/fin.
+ * 			Inicia o termina proceso. El GPIO_PIN_13 es el boton que inicia sirena
+ * 			en el modulo conectado por eth, osea el servidor.
+ * @note	Nombro proceso a funcion que:
+ * 				- Modifica Flag
+ * 				- Comienza o termina muestreo ADC
+ * 				- Comienza o termina transmición de datos
+ * 				- Enciende o apaga Led GPIO_PIN_13
+ * @param 	GPIO_Pin: Valor de PIN que llama a la interrupción
+ */
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if(GPIO_Pin == GPIO_PIN_12){			//A COMPLETAR CON FUNCION, RECORDAR FLAG QUE CONDICIONA PIN_13
+		if(estadoP ==false){
+			initJoystick(&hadc1,VR);
+			estadoP = true;
+			prendeLED();
+		}
+		else{
+			finJoystick(&hadc1);
+			estadoP = false;
+			apagaLED();
+		}
+	}
+	if((GPIO_Pin == GPIO_PIN_13) && (estadoP ==true));			//A COMPLETAR CON FUNCION, PIN_13 HABILITA SIRENA EN MODULO
+
+}
+
+
+void prendeLED(void){
+	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+}
+
+void apagaLED(void){
+	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+}
 
 /* USER CODE END 4 */
 

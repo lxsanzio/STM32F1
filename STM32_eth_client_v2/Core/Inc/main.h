@@ -38,14 +38,14 @@ extern "C" {
 #include "socket.h"
 #include <string.h>
 #include <stdio.h>
-
+#include <stdbool.h>
 #include "joystick.h"
+#include "cliente.h"
 /* USER CODE END Includes */
-
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
+extern UART_HandleTypeDef huart1;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -96,13 +96,16 @@ extern "C" {
 
 char msg[60];
 
-//uint16_t VR[2];			//Se comenta porque se declara en archivo fuente y se pasa como argumento a la afuncion
+
+
+
 
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
-
+void prendeLED(void);
+void apagaLED(void);
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */

@@ -11,11 +11,15 @@
 #define INC_JOYSTICK_H_
 
 #include <stdio.h>
+#include "stm32f1xx_hal.h"
 
-//extern uint16_t VR[2];
+static enum {sAdvance, sStop, sBack} sServoX, sServoY;		//variable enumerada para estado de movimiento de servo
+													// avanza, no se mueve o retrocede
 
-void initJoystick();
-uint8_t stateJoystick(uint16_t* );
+void initJoystick(ADC_HandleTypeDef *, uint16_t []);
+void finJoystick(ADC_HandleTypeDef *);
+void stateJoystick(uint16_t R[]);
+void stateButton(uint8_t);				//INTENSION DE CONTROLAR LUZ DEL PIN_C13
 
 
 #endif /* INC_JOYSTICK_H_ */
