@@ -1,11 +1,12 @@
 /*
- * cliente.c
+ * conectar.c
  *
- *  Created on: Jun 16, 2020
+ *  Created on: 18 jun. 2020
  *      Author: t440
  */
 
-#include "cliente.h"
+
+#include "conectar.h"
 
 extern SPI_HandleTypeDef hspi1;
 
@@ -158,3 +159,4 @@ void desconectar(uint8_t socketNum){
   close(socketNum);
 
 }
+

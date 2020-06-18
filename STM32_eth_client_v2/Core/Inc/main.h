@@ -40,7 +40,7 @@ extern "C" {
 #include <stdio.h>
 #include <stdbool.h>
 #include "joystick.h"
-#include "cliente.h"
+#include "conectar.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

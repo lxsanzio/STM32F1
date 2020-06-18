@@ -1,12 +1,13 @@
 /*
- * cliente.h
+ * conectar.h
  *
- *  Created on: Jun 16, 2020
+ *  Created on: 18 jun. 2020
  *      Author: t440
  */
 
-#ifndef INC_CLIENTE_H_
-#define INC_CLIENTE_H_
+#ifndef INC_CONECTAR_H_
+#define INC_CONECTAR_H_
+
 
 #include <stdio.h>
 #include "stm32f1xx_hal.h"
@@ -34,4 +35,5 @@ void initServer(uint8_t socketNum, uint8_t bufSize);
 
 void desconectar(uint8_t socketNum);
 
-#endif /* INC_CLIENTE_H_ */
+#endif /* INC_CONECTAR_H_ */
+
