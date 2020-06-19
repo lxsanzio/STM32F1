@@ -27,11 +27,19 @@ void cs_desel();
 uint8_t spi_rb(void);
 void spi_wb(uint8_t b);
 
-void initClient(uint8_t socketNum, uint8_t bufSize, uint8_t serverIP);
+void initClient(uint8_t socketNum, uint8_t bufSize);
 void initServer(uint8_t socketNum, uint8_t bufSize);
+
+uint8_t RetargetInit (uint8_t socketNum, uint8_t serverIP);
 
 void enviar();
 void recibir();
+/*
+ * int32_t send(uint8_t sn, uint8_t * buf, uint16_t len);
+where buf is the array of bytes having the len length.
+Instead, to receive an array of bytes from the remote peer, we use the function:
+int32_t recv(uint8_t sn, uint8_t * buf, uint16_t len);
+ */
 
 void desconectar(uint8_t socketNum);
 

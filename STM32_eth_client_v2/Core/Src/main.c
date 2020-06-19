@@ -87,6 +87,8 @@ int main(void)
 	uint8_t bufSize[] = {2, 2, 2, 2, 2, 2, 2, 2};
 	uint8_t socketnum = 0;
 	uint8_t serverIPP[4] = {192, 168, 2, 192};
+
+	uint16_t count = 0;
 	/* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -114,6 +116,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
 
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -125,6 +128,27 @@ int main(void)
 	  if(estadoP == true){
 		  stateJoystick(VR);
 	  }
+
+	  /*
+	   *
+	   * --------> IMPORTANTE
+	   * -----> VER TIEMPO DE ESTE CONTADOR. CALCULAR 30s y 50s EN
+	   * -----> EN EL OTRO
+	   */
+	  if((count > 200000) && (estadoP == true)){
+		  //CONDICIONAL: EVITA QUE ESTÉ SIEMPRE CONECTADO CON EL SERVIDOR
+		  disconect(socketNum);
+
+	  }
+
+	  if((count > 500000) && (estadoP == true)){
+		 //CONDICIONAL: EVITA QUE ESTE SIEMPRE HABILITADO EL MODULO
+		  close(socketNum);
+		  estadoP = false;
+		  count = 0;
+	  }
+
+	  count++;
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
