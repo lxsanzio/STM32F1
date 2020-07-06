@@ -49,6 +49,7 @@ void spi_wb(uint8_t b) {
  */
 
 void initClient(uint8_t socketNum, uint8_t bufSize){
+	uint8_t phyLink = 0;
 	reg_wizchip_cs_cbfunc(cs_sel, cs_desel);
 	reg_wizchip_spi_cbfunc(spi_rb, spi_wb);
 	wizchip_init(bufSize, bufSize);
@@ -56,12 +57,18 @@ void initClient(uint8_t socketNum, uint8_t bufSize){
 							.ip 		= {192, 168, 2, 191},
 							.sn			= {255, 255, 255, 0},
 							.gw			= {192, 168, 2, 1} };
+	 do {
+	    ctlwizchip(CW_GET_PHYLINK, (void*) &phyLink);
+	    osDelay(10);
+	  } while(phyLink == PHY_LINK_OFF);
+
 	wizchip_setnetinfo(&netInfo);
-	wizchip_getnetinfo(&netInfo);
+//	wizchip_getnetinfo(&netInfo);
 
 }
 
 void initServer(uint8_t socketNum, uint8_t bufSize){
+	uint8_t phyLink = 0;
 	reg_wizchip_cs_cbfunc(cs_sel, cs_desel);
 	reg_wizchip_spi_cbfunc(spi_rb, spi_wb);
 	wizchip_init(bufSize, bufSize);
@@ -69,9 +76,26 @@ void initServer(uint8_t socketNum, uint8_t bufSize){
 							.ip 		= {192, 168, 2, 192},
 							.sn			= {255, 255, 255, 0},
 							.gw			= {192, 168, 2, 1} };
+	do{
+		ctlwizchip(CW_GET_PHYLINK, (void*) &phyLink);
+	    osDelay(10);
+	} while(phyLink == PHY_LINK_OFF);
+
 	wizchip_setnetinfo(&netInfo);
-	wizchip_getnetinfo(&netInfo);
+//	wizchip_getnetinfo(&netInfo);
 }
+
+uint8_t estadoSocket(uint8_t socketNum){
+	uint16_t len;
+	len = getSn_RX_RSR(socketNum);
+	if (len > 0) 	return 1;
+	else 	return 1;
+}
+
+
+/*
+ * FUNCIONES A ANALIZAR Y MODIFICAR
+ */
 
 int8_t _write(int fd, char* ptr, int len, uint8_t socketNum){
   uint8_t sentlen = 0;
@@ -103,6 +127,27 @@ int8_t _write(int fd, char* ptr, int len, uint8_t socketNum){
 
 }
 
+int8_t _read(int fd, char* ptr, int len, uint8_t socketNum) {
+  if(getSn_SR(socketNum) == SOCK_ESTABLISHED) {
+    if (fd == STDIN_FILENO) {
+      while(1) {
+        len = recv(gSock, (void*) ptr, len);
+        if (len > 0)
+          return len;
+        else
+          return EIO;
+      }
+    }
+  } else if(getSn_SR(gSock) != SOCK_LISTEN) {
+    /* Remote peer close the connection? */
+    close(gSock);
+    RetargetInit(gSock);
+  }
+
+  errno = EBADF;
+  return -1;
+}
+
 uint8_t RetargetInit (uint8_t socketNum, uint8_t serverIP){
 	/*
 	 * ESTABLECIMIENTO Y CONFIGURACION DE SOCKET EN MODO TCP, BUSCANDO CONECTAR CON SERVIDOR
@@ -123,6 +168,16 @@ uint8_t RetargetInit (uint8_t socketNum, uint8_t serverIP){
 		return 0;
 		}
 }
+
+/*
+
+getSn_RX_RSR
+Received data size register(R)
+
+Sn_RX_RSR indicates the data size received and saved in Socket n RX Buffer.
+Sn_RX_RSR does not exceed the Sn_RXBUF_SIZE and is calculated as the difference between
+ï¿½Socket n RX Write Pointer (Sn_RX_WR)and ï¿½Socket n RX Read Pointer (Sn_RX_RD)
+*/
 
 /*
  * @brief	Inicializador del servidor
