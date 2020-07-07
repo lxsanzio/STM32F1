@@ -59,11 +59,11 @@ void initClient(uint8_t socketNum, uint8_t bufSize){
 							.gw			= {192, 168, 2, 1} };
 	 do {
 	    ctlwizchip(CW_GET_PHYLINK, (void*) &phyLink);
-	    osDelay(10);
+	    HAL_Delay(10);
 	  } while(phyLink == PHY_LINK_OFF);
 
 	wizchip_setnetinfo(&netInfo);
-//	wizchip_getnetinfo(&netInfo);
+//	wizchip_getnetinfo(&netInfo);		No hace falta que esté
 
 }
 
@@ -78,7 +78,7 @@ void initServer(uint8_t socketNum, uint8_t bufSize){
 							.gw			= {192, 168, 2, 1} };
 	do{
 		ctlwizchip(CW_GET_PHYLINK, (void*) &phyLink);
-	    osDelay(10);
+	    HAL_Delay(10);
 	} while(phyLink == PHY_LINK_OFF);
 
 	wizchip_setnetinfo(&netInfo);
@@ -97,56 +97,57 @@ uint8_t estadoSocket(uint8_t socketNum){
  * FUNCIONES A ANALIZAR Y MODIFICAR
  */
 
-int8_t _write(int fd, char* ptr, int len, uint8_t socketNum){
-  uint8_t sentlen = 0;
-  uint8_t buflen = len;
+//int8_t _write(int fd, char* ptr, int len, uint8_t socketNum){
+//  uint8_t sentlen = 0;
+//  uint8_t buflen = len;
+//
+//  if(getSn_SR(socketNum) == SOCK_ESTABLISHED) {
+//	if (fd == STDOUT_FILENO || fd == STDERR_FILENO) {
+//	  while(1) {
+//		sentlen = send(gSock, (void*) ptr, buflen);
+//		if (sentlen == buflen)
+//		  return len;
+//		else if (sentlen > 0 && sentlen < buflen) {
+//		  buflen -= sentlen;
+//		  ptr += (len - buflen);
+//		}
+//		else if (sentlen < 0)
+//		  return EIO;
+//	  }
+//	}
+//  } else if(getSn_SR(gSock) != SOCK_LISTEN) {
+//	/* Remote peer close the connection? */
+//	close(gSock);
+//	RetargetInit(gSock);
+//  }
+//
+//  errno = EBADF;
+//  return -1;
+//
+//
+//}
+//
+//int8_t _read(int fd, char* ptr, int len, uint8_t socketNum) {
+//  if(getSn_SR(socketNum) == SOCK_ESTABLISHED) {
+//    if (fd == STDIN_FILENO) {
+//      while(1) {
+//        len = recv(gSock, (void*) ptr, len);
+//        if (len > 0)
+//          return len;
+//        else
+//          return EIO;
+//      }
+//    }
+//  } else if(getSn_SR(gSock) != SOCK_LISTEN) {
+//    /* Remote peer close the connection? */
+//    close(gSock);
+//    RetargetInit(gSock);
+//  }
+//
+//  errno = EBADF;
+//  return -1;
+//}
 
-  if(getSn_SR(socketNum) == SOCK_ESTABLISHED) {
-	if (fd == STDOUT_FILENO || fd == STDERR_FILENO) {
-	  while(1) {
-		sentlen = send(gSock, (void*) ptr, buflen);
-		if (sentlen == buflen)
-		  return len;
-		else if (sentlen > 0 && sentlen < buflen) {
-		  buflen -= sentlen;
-		  ptr += (len - buflen);
-		}
-		else if (sentlen < 0)
-		  return EIO;
-	  }
-	}
-  } else if(getSn_SR(gSock) != SOCK_LISTEN) {
-	/* Remote peer close the connection? */
-	close(gSock);
-	RetargetInit(gSock);
-  }
-
-  errno = EBADF;
-  return -1;
-
-
-}
-
-int8_t _read(int fd, char* ptr, int len, uint8_t socketNum) {
-  if(getSn_SR(socketNum) == SOCK_ESTABLISHED) {
-    if (fd == STDIN_FILENO) {
-      while(1) {
-        len = recv(gSock, (void*) ptr, len);
-        if (len > 0)
-          return len;
-        else
-          return EIO;
-      }
-    }
-  } else if(getSn_SR(gSock) != SOCK_LISTEN) {
-    /* Remote peer close the connection? */
-    close(gSock);
-    RetargetInit(gSock);
-  }
-
-  errno = EBADF;
-  return -1;
-}
 
 uint8_t RetargetInit (uint8_t socketNum, uint8_t serverIP){
 	/*

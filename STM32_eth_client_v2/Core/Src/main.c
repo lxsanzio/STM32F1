@@ -84,9 +84,9 @@ int main(void)
 	 * VARIABLES PARA DEFINICION DE CONEXION TCP
 	 */
 
-	uint8_t bufSize[] = {2, 2, 2, 2, 2, 2, 2, 2};
-	uint8_t socketnum = 0;
-	uint8_t serverIPP[4] = {192, 168, 2, 192};
+	uint8_t bufSize[] = {16, 0, 0, 0, 0, 0, 0, 0};
+	uint8_t socketNum = 0;
+	uint8_t serverIP[4] = {192, 168, 2, 192};
 
 	uint16_t count = 0;
 	/* USER CODE END 1 */
@@ -114,7 +114,10 @@ int main(void)
   MX_SPI1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  /*
+   * Inicializo modulo cliente
+   */
+  initClient(socketNum, bufSize);
 
 
   /* USER CODE END 2 */
@@ -127,6 +130,7 @@ int main(void)
 
 	  if(estadoP == true){
 		  stateJoystick(VR);
+		  RetargetInit(socketNum,serverIP);
 	  }
 
 	  /*
@@ -137,16 +141,18 @@ int main(void)
 	   */
 	  if((count > 200000) && (estadoP == true)){
 		  //CONDICIONAL: EVITA QUE ESTÉ SIEMPRE CONECTADO CON EL SERVIDOR
-		  disconect(socketNum);
-
-	  }
-
-	  if((count > 500000) && (estadoP == true)){
-		 //CONDICIONAL: EVITA QUE ESTE SIEMPRE HABILITADO EL MODULO
-		  close(socketNum);
-		  estadoP = false;
+		  desconectar(socketNum);
 		  count = 0;
+		  estadoP = false;
+		  HAL_Delay(500);
 	  }
+
+//	  if((count > 500000) && (estadoP == true)){
+//		 //CONDICIONAL: EVITA QUE ESTE SIEMPRE HABILITADO EL MODULO
+//		  close(socketNum);
+//		  estadoP = false;
+//		  count = 0;
+//	  }
 
 	  count++;
     /* USER CODE BEGIN 3 */
@@ -398,6 +404,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			initJoystick(&hadc1,VR);
 			estadoP = true;
 			prendeLED();
+
 		}
 		else{
 			finJoystick(&hadc1);
