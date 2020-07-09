@@ -89,6 +89,10 @@ int main(void)
 	uint8_t serverIP[4] = {192, 168, 2, 192};
 
 	uint16_t count = 0;
+
+	//AGREGAR uint8_t *bufData!!!
+
+
 	/* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
