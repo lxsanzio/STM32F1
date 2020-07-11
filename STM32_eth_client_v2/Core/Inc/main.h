@@ -104,8 +104,7 @@ char msg[60];
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
-void prendeLED(void);
-void apagaLED(void);
+
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */
