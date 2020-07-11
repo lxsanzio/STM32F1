@@ -18,7 +18,7 @@
  */
 
 void initJoystick(ADC_HandleTypeDef* hadc1, uint16_t VR[]){
-	HAL_ADC_Start_DMA(&hadc1,(uint32_t *)VR,2);
+	HAL_ADC_Start_DMA(hadc1,(uint32_t *)VR,2);
 }
 
 /**
@@ -30,7 +30,7 @@ void initJoystick(ADC_HandleTypeDef* hadc1, uint16_t VR[]){
  */
 
 void finJoystick(ADC_HandleTypeDef *hadc1){
-	HAL_ADC_Stop_DMA(&hadc1);
+	HAL_ADC_Stop_DMA(hadc1);
 }
 
 

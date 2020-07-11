@@ -28,14 +28,16 @@ void cs_desel();
 uint8_t spi_rb(void);
 void spi_wb(uint8_t b);
 
-void initClient(uint8_t socketNum, uint8_t bufSize);
-void initServer(uint8_t socketNum, uint8_t bufSize);
+void initClient(uint8_t socketNum, uint8_t* bufSize);
+void initServer(uint8_t socketNum, uint8_t* bufSize);
 
-uint8_t RetargetInit (uint8_t socketNum, uint8_t serverIP);
+uint8_t estadoSocket(uint8_t socketNum);
 
-int8_t envia(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t serverIP);
-int8_t recibe(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t serverIP);
 
+int8_t envia(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP);
+int8_t recibe(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP);
+
+uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP);
 
 void desconectar(uint8_t socketNum);
 

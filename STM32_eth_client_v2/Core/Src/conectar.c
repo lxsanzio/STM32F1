@@ -47,11 +47,11 @@ void spi_wb(uint8_t b) {
  * 			de asignación total entre la suma de los socket.
  */
 
-void initClient(uint8_t socketNum, uint8_t bufSize){
+void initClient(uint8_t socketNum, uint8_t* bufSize){
 	uint8_t phyLink = 0;
 	reg_wizchip_cs_cbfunc(cs_sel, cs_desel);
 	reg_wizchip_spi_cbfunc(spi_rb, spi_wb);
-	wizchip_init(&bufSize, &bufSize);
+	wizchip_init(bufSize, bufSize);
 	wiz_NetInfo netInfo = { .mac		= {0x00, 0x08, 0xdc, 0xab, 0xef}, //Mac Addres
 							.ip 		= {192, 168, 2, 191},
 							.sn			= {255, 255, 255, 0},
@@ -78,11 +78,11 @@ void initClient(uint8_t socketNum, uint8_t bufSize){
  * 			de asignación total entre la suma de los socket.
  */
 
-void initServer(uint8_t socketNum, uint8_t bufSize){
+void initServer(uint8_t socketNum, uint8_t* bufSize){
 	uint8_t phyLink = 0;
 	reg_wizchip_cs_cbfunc(cs_sel, cs_desel);
 	reg_wizchip_spi_cbfunc(spi_rb, spi_wb);
-	wizchip_init(&bufSize, &bufSize);
+	wizchip_init(bufSize, bufSize);
 	wiz_NetInfo netInfo = { .mac		= {0x00, 0x08, 0xdc, 0xab, 0xff}, //Mac Addres
 							.ip 		= {192, 168, 2, 192},
 							.sn			= {255, 255, 255, 0},
@@ -124,7 +124,7 @@ uint8_t estadoSocket(uint8_t socketNum){
  *
  */
 
-int8_t envia(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t serverIP){
+int8_t envia(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP){
 	uint16_t buflen;
 	uint32_t sentlen;
 	if(getSn_SR(socketNum) == SOCK_ESTABLISHED){
@@ -162,7 +162,7 @@ int8_t envia(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t serverIP){
  * 			EIO: Error de I/O. val. '5'
  * 			0: si se envio correctamente.
  */
-int8_t recibe(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t serverIP){
+int8_t recibe(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP){
 	if(getSn_SR(socketNum) == SOCK_ESTABLISHED){
 		while(1){
 			len = recv(socketNum, (void*)pbufData,len);
@@ -200,7 +200,7 @@ int8_t recibe(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t serverIP){
  * 			- En caso de ser servidor debe incializar el socket y luego quedar en modo 'listen'
  */
 
-uint8_t RetargetInit (uint8_t socketNum, uint8_t serverIP){
+uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP){
 	/*
 	 * ESTABLECIMIENTO Y CONFIGURACION DE SOCKET EN MODO TCP, BUSCANDO CONECTAR CON SERVIDOR
 	 * O ESCUCHA CLIENTE SI ES SERVIDOR
@@ -208,7 +208,7 @@ uint8_t RetargetInit (uint8_t socketNum, uint8_t serverIP){
 	if(socket(socketNum, Sn_MR_TCP, TCP_PORT, SF_TCP_NODELAY) == socketNum){
 		HAL_Delay(800);
 		if(serverIP != 0){
-			if(connect(socketNum,&serverIP,TCP_PORT) == SOCK_OK)
+			if(connect(socketNum,serverIP,TCP_PORT) == SOCK_OK)
 				return 1 ;
 			return 0;
 		}
