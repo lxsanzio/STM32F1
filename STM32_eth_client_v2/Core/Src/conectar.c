@@ -96,94 +96,89 @@ void initServer(uint8_t socketNum, uint8_t bufSize){
 //	wizchip_getnetinfo(&netInfo);
 }
 
+
+/*	@brief	Estado del socket
+ * 	@param	socketNum: entero sin signo que identifica el socket del modulo.
+ * 	@note	Esta funcion testea el stack RX del modulo.
+ * 	@retval	0: No hay datos que recibir
+ * 			1: Hay datos el stack RX
+ */
 uint8_t estadoSocket(uint8_t socketNum){
 	uint16_t len;
 	len = getSn_RX_RSR(socketNum);
 	if (len > 0) 	return 1;
-	else 	return 1;
+	else 	return 0;
 }
 
-int8_t envia(uint8_t socketNum, char* pbufData, uint8_t *lenData){
-	uint16_t len;
+/*
+ * @brief	Enviar datos
+ * @oaram	socketNum: entero sin signo que identifica el socket del modulo.
+ * 			pbufData: Puntero al dato a enviar.
+ * 			len: tamaño de lo que se envia.
+ * 			serverIP: Array entero sin signo que se pasa por referencia en funcion connect(),
+ * 			en caso de llamar retargetInit y el que este enviando info es el cliente. Si es server
+ * 			se pasa paramatro '0'.
+ * @retval -1: Bad File Number 'val = 9'
+ * 			0: Se envio el paquete completo.
+ * 			EIO: Hubo un error de I/O valor 'errno = 5'
+ *
+ */
+
+int8_t envia(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t serverIP){
+	uint16_t buflen;
 	uint32_t sentlen;
+	if(getSn_SR(socketNum) == SOCK_ESTABLISHED){
+		buflen = (uint16_t)len;
+		while(1){
+			sentlen = send(socketNum, (void*) pbufData, buflen);
+			if ((uint16_t )sentlen == buflen)
+				return 0;
+			else if ((sentlen > 0) && (sentlen < buflen)){  //En caso de que haya quedado algo por enviar
+					buflen -= sentlen;
+					pbufData += (len - buflen);				//CORRE de lugar el array
 
-	len = getSn_RX_RSR(socketNum);
-	if(estadoScket(socketNum)) return (-1);
-	// recibir(socketNum); significa que hay algo por recibir pero debe controlarse
-	// una jerarquia mas arriba, o desde el main o interrupcion
-	else{
-		if(getSn_SR(socketNum) == SOCK_ESTABLISHED){
-			len = (uin16_t *)(&lenData);
-			while(1){
-				sentlen = send (socketNum, (void*)pbufData, len);
-				if ((uint16_t *)sentlen == len)
-					return 0; //modificar el 0 Se envio todo significaría
-				else if ((sentlen > 0) && (sentlen < &lenData)){  //En caso de que haya quedado algo por enviar
-						&lendata -= sentlen;
-						pbufData += (len - pbufData);
-						//HACE FALTA SEGUIR ENVIANDO DATOS, CORRER
-				}
-				else if (sentlen < 0)  //Menor a cero Error
-					return EIO;
-
-				}
 			}
-		else if(getSn_SR(socketNum) != SOCKET_CONNECT)
+			else if (sentlen < 0)  //Menor a cero Error FALTAL
+				return EIO;		//EIO = 5 en 'errno.h' I/O Error
+			}
+		}
+	else if(getSn_SR(socketNum) != SOCK_ESTABLISHED){
+			close(socketNum);
+			RetargetInit(socketNum, serverIP);
+	}
+	errno = EBADF;
+	return -1; // Hubo algún error
+}
 
+/*
+ * @brief	Recibe datos
+ * @oaram	socketNum: entero sin signo que identifica el socket del modulo.
+ * 			pbufData: Puntero al dato a enviar.
+ * 			len: tamaño de lo que se envia.
+ * 			serverIP: Array entero sin signo que se pasa por referencia en funcion connect(),
+ * 			en caso de llamar retargetInit y el que este enviando info es el cliente. Si es server
+ * 			se pasa paramatro '0'.
+ * @retval  -1: Salio mal algo al intentar recibir.
+ * 			EIO: Error de I/O. val. '5'
+ * 			0: si se envio correctamente.
+ */
+int8_t recibe(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t serverIP){
+	if(getSn_SR(socketNum) == SOCK_ESTABLISHED){
+		while(1){
+			len = recv(socketNum, (void*)pbufData,len);
+			if(len > 0)
+				return 0;
+			else
+				return EIO;
 		}
 	}
-
-//int8_t _write(int fd, char* ptr, int len, uint8_t socketNum){
-//  uint8_t sentlen = 0;
-//  uint8_t buflen = len;
-//
-//  if(getSn_SR(socketNum) == SOCK_ESTABLISHED) {
-//	if (fd == STDOUT_FILENO || fd == STDERR_FILENO) {
-//	  while(1) {
-//		sentlen = send(gSock, (void*) ptr, buflen);
-//		if (sentlen == buflen)
-//		  return len;
-//		else if (sentlen > 0 && sentlen < buflen) {
-//		  buflen -= sentlen;
-//		  ptr += (len - buflen);
-//		}
-//		else if (sentlen < 0)
-//		  return EIO;
-//	  }
-//	}
-//  } else if(getSn_SR(gSock) != SOCK_LISTEN) {
-//	/* Remote peer close the connection? */
-//	close(gSock);
-//	RetargetInit(gSock);
-//  }
-//
-//  errno = EBADF;
-//  return -1;
-//
-//
-//}
-//
-//int8_t _read(int fd, char* ptr, int len, uint8_t socketNum) {
-//  if(getSn_SR(socketNum) == SOCK_ESTABLISHED) {
-//    if (fd == STDIN_FILENO) {
-//      while(1) {
-//        len = recv(gSock, (void*) ptr, len);
-//        if (len > 0)
-//          return len;
-//        else
-//          return EIO;
-//      }
-//    }
-//  } else if(getSn_SR(gSock) != SOCK_LISTEN) {
-//    /* Remote peer close the connection? */
-//    close(gSock);
-//    RetargetInit(gSock);
-//  }
-//
-//  errno = EBADF;
-//  return -1;
-//}
-
+	else{
+		close(socketNum);
+		RetargetInit(socketNum, serverIP);
+	}
+	errno = EBADF;
+	return -1;
+}
 
 /*
  * @brief	Recargador de Inicio
@@ -194,9 +189,10 @@ int8_t envia(uint8_t socketNum, char* pbufData, uint8_t *lenData){
  * 					 SI ES CLIENTE, IGUALAR PREVIAMENTE A CERO "serverIP = 0" O EN EL MOMENTO
  * 					 DE HACER LA LLAMADA A LA FUNCION PASAR PARAMETRO 0
  * 		 	serverIP: array entero sin signo que se pasa por referencia en funcion connect().
- * @retval	0: No se pudo establecer comunicacion. Cliente con servidor o servidor en modo listen.
+ * @retval	0: No se pudo establecer comunicacion con Cliente.
  * 			1: Se estableció la coneccion entre cliente y servidor.
  * 			2: No se pudo establecer el socket.
+ * 			3: No se pudo establecer comunicacion con servidor
  * @note	Esta funcion se llama para reorientar o actualizar los modos en los modulos W5500.
  * 			- Inicia socket, si devuelve el mismo valor de socket, se inicio exitoso
  * 			- Necesita el modulo un tiempo
@@ -212,7 +208,7 @@ uint8_t RetargetInit (uint8_t socketNum, uint8_t serverIP){
 	if(socket(socketNum, Sn_MR_TCP, TCP_PORT, SF_TCP_NODELAY) == socketNum){
 		HAL_Delay(800);
 		if(serverIP != 0){
-			if(connect(socketNum,&serverIP,TCP_PORT == SOCK_OK);
+			if(connect(socketNum,&serverIP,TCP_PORT) == SOCK_OK)
 				return 1 ;
 			return 0;
 		}
@@ -220,7 +216,7 @@ uint8_t RetargetInit (uint8_t socketNum, uint8_t serverIP){
 			if(listen(socketNum) == SOCK_OK)
 				return 1;
 		}
-		return 0;
+		return 3;
 		}
 	return 2;
 }

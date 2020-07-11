@@ -15,6 +15,7 @@
 #include "wizchip_conf.h"
 #include "w5500.h"
 #include "socket.h"
+#include "errno.h"
 //#include "main.h" 		//se agrega para que no solicite info de las macros
 /*
  * 		PUERTO COMUNICACION TCP
@@ -32,14 +33,9 @@ void initServer(uint8_t socketNum, uint8_t bufSize);
 
 uint8_t RetargetInit (uint8_t socketNum, uint8_t serverIP);
 
-void enviar();
-void recibir();
-/*
- * int32_t send(uint8_t sn, uint8_t * buf, uint16_t len);
-where buf is the array of bytes having the len length.
-Instead, to receive an array of bytes from the remote peer, we use the function:
-int32_t recv(uint8_t sn, uint8_t * buf, uint16_t len);
- */
+int8_t envia(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t serverIP);
+int8_t recibe(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t serverIP);
+
 
 void desconectar(uint8_t socketNum);
 
