@@ -87,6 +87,8 @@ int main(void)
 	uint8_t serverIP[4] = {192, 168, 2, 192};
 
 	uint16_t count = 0;
+	uint8_t _stateJoyX = 0;
+	uint8_t _stateJoyY = 0;
 
 	//AGREGAR uint8_t *bufData!!!
 
@@ -133,6 +135,8 @@ int main(void)
 	  if(estadoP == true){
 		  stateJoystick(VR);
 		  RetargetInit(socketNum,serverIP);
+		  _stateX = stateJoysticks(v[0]);
+		  _stateY = stateJoysticks(v[1]);
 	  }
 
 	  /*

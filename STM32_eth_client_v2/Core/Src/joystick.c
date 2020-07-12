@@ -34,6 +34,26 @@ void finJoystick(ADC_HandleTypeDef *hadc1){
 }
 
 
+/*
+ * @brief	Determina estado de joystick.
+ * @param	R: Entero sin signo de 16b que lo arbitra el ADC
+ * @note	Al invocarse el método se elige el array a verificar si el que corresponde a X o Y.
+ * @retval	-1: Retrocede
+ * 			0:  No se mueve
+ * 			1:	Adelanta
+ */
+
+int8_t stateJoysticks(uint16_t R){
+	if ((R <= 800))
+	return -1;
+	if ((R >= 2000) && (R <= 3000))
+	return 0;
+	if ((R >= 4000))
+	return 1;
+
+}
+
+
 /**
  * @brief   Estado del Joystick que determina si el movimiento es incremental,
  * 			decremental o se mantiene quieto.
