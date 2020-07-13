@@ -59,7 +59,12 @@ static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART1_UART_Init(void);
+
+
 /* USER CODE BEGIN PFP */
+void prendeLED(void);
+void apagaLED(void);
+
 
 /* USER CODE END PFP */
 
@@ -87,8 +92,8 @@ int main(void)
 	uint8_t serverIP[4] = {192, 168, 2, 192};
 
 	uint16_t count = 0;
-	uint8_t _stateJoyX = 0;
-	uint8_t _stateJoyY = 0;
+	int8_t _stateJoyX = 0;
+	int8_t _stateJoyY = 0;
 
 	//AGREGAR uint8_t *bufData!!!
 
@@ -133,10 +138,9 @@ int main(void)
     /* USER CODE END WHILE */
 
 	  if(estadoP == true){
-		  stateJoystick(VR);
 		  RetargetInit(socketNum,serverIP);
-		  _stateX = stateJoysticks(v[0]);
-		  _stateY = stateJoysticks(v[1]);
+		  _stateJoyX = stateJoysticks(VR[0]);
+		  _stateJoyY = stateJoysticks(VR[1]);
 	  }
 
 	  /*
