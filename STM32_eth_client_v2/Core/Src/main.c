@@ -48,6 +48,7 @@ SPI_HandleTypeDef hspi1;
 
 UART_HandleTypeDef huart1;
 static bool estadoP = false;
+uint8_t _sirena = 0;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -65,6 +66,8 @@ static void MX_USART1_UART_Init(void);
 void prendeLED(void);
 void apagaLED(void);
 
+void translate (char *msg, uint8_t *rcv);
+void parpadea (void);
 
 /* USER CODE END PFP */
 
@@ -94,6 +97,8 @@ int main(void)
 	uint16_t count = 0;
 	int8_t _stateJoyX = 0;
 	int8_t _stateJoyY = 0;
+	uint8_t recv;
+	char msg[60];
 
 	//AGREGAR uint8_t *bufData!!!
 
@@ -137,10 +142,25 @@ int main(void)
   {
     /* USER CODE END WHILE */
 
+
 	  if(estadoP == true){
 		  RetargetInit(socketNum,serverIP);
 		  _stateJoyX = stateJoysticks(VR[0]);
 		  _stateJoyY = stateJoysticks(VR[1]);
+
+		  if(envia(socketNum,_stateJoyX, sizeof(_stateJoyX), serverIP));
+			  //PROBLEMA AL ENVIAR DATO, VISUALIZAR POR USART
+		  if(envia(socketNum,_stateJoyY, sizeof(_stateJoyX), serverIP));
+		  	  //PROBLEMA AL ENVIAR DATO, VISUALIZAR POR USART
+		  if(envia(socketNum, _sirena, sizeof(_sirena), serverIP));
+		  	  //PROBLEMA AL ENVIAR DATO, VISUALIZAR POR USART
+
+		  if(estadoSocket(socketNum)){
+			  if(recibe(socketNum, msg, strlen(msg),serverIP)){
+				  translate(msg,&recv);
+				  if(recv == 1) parpadea();
+			  }
+		  }
 	  }
 
 	  /*
@@ -168,6 +188,19 @@ int main(void)
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
+/*
+ * CODIGO RECICLADO PARA HABILITAR UNA VEZ SE TRADUZCA LO RECIBIDO EN ENTERO
+ */
+//  uint8_t i = 0;
+//  while(i < 3){
+//  prendeLED();
+//  delay(50);
+//  apagaLED();
+//  delay(50);
+//  i++;
+//  }
+
+
 }
 
 /**
@@ -419,7 +452,7 @@ static void MX_GPIO_Init(void)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(GPIO_Pin == GPIO_PIN_12){			//A COMPLETAR CON FUNCION, RECORDAR FLAG QUE CONDICIONA PIN_13
-		if(estadoP ==false){
+		if(estadoP == false){
 			initJoystick(&hadc1,VR);
 			estadoP = true;
 			prendeLED();
@@ -431,7 +464,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			apagaLED();
 		}
 	}
-	if((GPIO_Pin == GPIO_PIN_13) && (estadoP ==true));
+	if((GPIO_Pin == GPIO_PIN_13) && (estadoP ==true)){
+		if(_sirena == 0)
+			_sirena = 1;
+		if(_sirena == 1)
+			_sirena = 0;
+	}
 	//A COMPLETAR CON FUNCION, PIN_13 HABILITA SIRENA EN MODULO
 
 }
@@ -443,6 +481,23 @@ void prendeLED(void){
 
 void apagaLED(void){
 	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+}
+
+void translate (char *msg, uint8_t *rcv){
+
+	if(msg[0] == 0) *rcv = 0;				// Es lo toma entero a la comparacion.
+	if(msg[0] == 1) *rcv = 1;
+}
+
+void parpadea (void){
+	uint8_t i =0;
+	while(i < 5){
+		apagaLED();
+		HAL_Delay(50);
+		prendeLED();
+		HAL_Delay(50);
+		i++;
+	}
 }
 
 /* USER CODE END 4 */
