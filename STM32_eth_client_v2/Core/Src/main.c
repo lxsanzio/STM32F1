@@ -98,15 +98,16 @@ int main(void)
 	uint8_t serverIP[4] = {192, 168, 2, 192};
 
 	uint16_t count = 0;
-	int8_t _stateJoyX = 0;
-	int8_t _stateJoyY = 0;
+	int8_t _stateJoyX;
+	int8_t _stateJoyY;
 	uint8_t recv;
 	uint8_t snd[3];
 	char bufmsg[60];
 	int8_t stateTx;
 	int8_t stateRx;
+	int8_t stateRetarget;
 
-	int8_t _state;
+//	int8_t _state;			No hace falta se creo para el sistema las alerta UART
 
 	//AGREGAR uint8_t *bufData!!!
 
@@ -135,7 +136,11 @@ int main(void)
   MX_ADC1_Init();
   MX_SPI1_Init();
   MX_USART1_UART_Init();
+
+
   /* USER CODE BEGIN 2 */
+
+  PRINT_HEADER();
   /*
    * Inicializo modulo cliente
    */
@@ -149,76 +154,52 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
-
-	  if(estadoP == true){
-		  RetargetInit(socketNum,serverIP);
-		  _stateJoyX = stateJoysticks(VR[0]);
-		  _stateJoyY = stateJoysticks(VR[1]);
-
-		  snd[0] = _stateJoyX;
-		  snd[1] = _stateJoyY;
-		  snd[2] = _sirena;
-
-		  sprintf(bufmsg,"%d,%d,%d",snd[0],snd[1],snd[2]);
-
-		  /*
-		  * @retval -1: Bad File Number 'val = 9'
-		  * 			0: Se envio el paquete completo.
-		  * 			EIO: Hubo un error de I/O valor 'errno = 5'
-	 	  */
-
-		  if((stateTx = envia(socketNum, bufmsg, (uint8_t)strlen(bufmsg), serverIP)) == 0){
-			  //SE ENVIO TODO BIEN AVISAR POR USART
-
-		  }
-		  else{
-
-			  //VISUALIZAR ERROR POR USART
-		  }
-			  //
-			  //PROBLEMA AL ENVIAR DATO, VISUALIZAR POR USART
-//		  if(envia(socketNum,_stateJoyY, sizeof(_stateJoyX), serverIP));
-//		  	  //PROBLEMA AL ENVIAR DATO, VISUALIZAR POR USART
-//		  if(envia(socketNum, _sirena, sizeof(_sirena), serverIP));
-//		  	  //PROBLEMA AL ENVIAR DATO, VISUALIZAR POR USART
-
-		  if(estadoSocket(socketNum)){
-			  if((stateRx = recibe(socketNum, bufmsg, (uint8_t)strlen(bufmsg),serverIP)) == 0){
-				  translate(bufmsg,&recv);
-				  if(recv == 1) parpadea();
+	  while(estadoP == true){
+		 if((stateRetarget = RetargetInit(socketNum,serverIP)) == 1){
+			  _stateJoyX = stateJoysticks(VR[0]);
+			  _stateJoyY = stateJoysticks(VR[1]);
+			  snd[0] = _stateJoyX;
+			  snd[1] = _stateJoyY;
+			  snd[2] = _sirena;
+			  sprintf(bufmsg,"%d,%d,%d",snd[0],snd[1],snd[2]);
+			  /*
+			  * @retval		-1: Bad File Number 'val = 9'
+			  * 			0: Se envio el paquete completo.
+			  * 			EIO: Hubo un error de I/O valor , errno = 5
+			  */
+			  if((stateTx = envia(socketNum, bufmsg, (uint8_t)strlen(bufmsg), serverIP)) == 0){
+				  PRINT_OK();
 			  }
 			  else{
-				  //MOSTRAR POR USART EL PROBLEMA DADO POR stateRx
+				  PRINT_FAIL_TX(stateTx);					  //VISUALIZAR ERROR POR USART
 			  }
-		  }
-		  recv = 0; //reinicia variable recibida. CReo innecesaria.
+			  if((stateRx = estadoSocket(socketNum)) == 1){
+				  if((stateRx = recibe(socketNum, bufmsg, (uint8_t)strlen(bufmsg),serverIP)) == 0){
+					  translate(bufmsg,&recv);
+					  if(recv == 1) parpadea();
+				  }
+				  else{
+					  PRINT_FAIL_RX(stateRx);				//MOSTRAR POR USART EL PROBLEMA DADO POR stateRx
+				  }
+			  }
+			  else
+				  PRINT_FAIL_STATUS_SOCK(stateRx);
+		 }
+		 else PRINT_FAIL_STATUS_SOCK(stateRetarget);
+		 recv = 0; //reinicia variable recibida. CReo innecesaria.
+		 count++;
+
+		 if(count > 200000){
+			  //CONDICIONAL: EVITA QUE ESTÉ SIEMPRE CONECTADO CON EL SERVIDOR
+			  desconectar(socketNum);
+			  count = 0;
+			  estadoP = false;
+			  apagaLED();
+			  HAL_Delay(500);
+		 }
 	  }
 
 
-
-	  /*
-	   *
-	   * --------> IMPORTANTE
-	   * -----> VER TIEMPO DE ESTE CONTADOR. CALCULAR 30s y 50s EN
-	   * -----> EN EL OTRO
-	   */
-	  if((count > 200000) && (estadoP == true)){
-		  //CONDICIONAL: EVITA QUE ESTÉ SIEMPRE CONECTADO CON EL SERVIDOR
-		  desconectar(socketNum);
-		  count = 0;
-		  estadoP = false;
-		  HAL_Delay(500);
-	  }
-
-//	  if((count > 500000) && (estadoP == true)){
-//		 //CONDICIONAL: EVITA QUE ESTE SIEMPRE HABILITADO EL MODULO
-//		  close(socketNum);
-//		  estadoP = false;
-//		  count = 0;
-//	  }
-
-	  count++;
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -489,13 +470,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			desconectar(socketNum);
 		}
 	}
+	//AL PRECIONAR EL BOTON DE SIRENA SE SETEA EN ACTIVO LA VARIABLE
 	if((GPIO_Pin == GPIO_PIN_13) && (estadoP ==true)){
-		if(_sirena == 0)
-			_sirena = 1;
-		if(_sirena == 1)
-			_sirena = 0;
+		if(_sirena == 0) _sirena = 1;
+		if(_sirena == 1) _sirena = 0;
 	}
-	//A COMPLETAR CON FUNCION, PIN_13 HABILITA SIRENA EN MODULO
+
 
 }
 

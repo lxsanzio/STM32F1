@@ -62,8 +62,8 @@ void initClient(uint8_t socketNum, uint8_t* bufSize){
 	  } while(phyLink == PHY_LINK_OFF);
 
 	wizchip_setnetinfo(&netInfo);
-//	wizchip_getnetinfo(&netInfo);		No hace falta que esté
-
+	wizchip_getnetinfo(&netInfo);
+	PRINT_NETINFO(netInfo);				//VISUALIZA POR USART LOS PARAMETROS DE RED
 }
 /*
  * @brief	Inicializador del Server
@@ -93,7 +93,8 @@ void initServer(uint8_t socketNum, uint8_t* bufSize){
 	} while(phyLink == PHY_LINK_OFF);
 
 	wizchip_setnetinfo(&netInfo);
-//	wizchip_getnetinfo(&netInfo);
+	wizchip_getnetinfo(&netInfo);
+	PRINT_NETINFO(netInfo);				//VISUALIZA POR USART LOS PARAMETROS DE RED
 }
 
 
@@ -201,10 +202,6 @@ int8_t recibe(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP)
  */
 
 uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP){
-	/*
-	 * ESTABLECIMIENTO Y CONFIGURACION DE SOCKET EN MODO TCP, BUSCANDO CONECTAR CON SERVIDOR
-	 * O ESCUCHA CLIENTE SI ES SERVIDOR
-	 */
 	if(socket(socketNum, Sn_MR_TCP, TCP_PORT, SF_TCP_NODELAY) == socketNum){
 		HAL_Delay(800);
 		if(serverIP != 0){
@@ -217,19 +214,10 @@ uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP){
 				return 1;
 		}
 		return 3;
-		}
+	}
 	return 2;
 }
 
-/*
-
-getSn_RX_RSR
-Received data size register(R)
-
-Sn_RX_RSR indicates the data size received and saved in Socket n RX Buffer.
-Sn_RX_RSR does not exceed the Sn_RXBUF_SIZE and is calculated as the difference between
-ï¿½Socket n RX Write Pointer (Sn_RX_WR)and ï¿½Socket n RX Read Pointer (Sn_RX_RD)
-*/
 
 /*
  * @brief	Inicializador del servidor

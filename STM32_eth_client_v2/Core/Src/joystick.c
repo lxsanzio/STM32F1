@@ -44,13 +44,9 @@ void finJoystick(ADC_HandleTypeDef *hadc1){
  */
 
 int8_t stateJoysticks(uint16_t R){
-	if ((R <= 800))
-	return -1;
-	if ((R >= 2000) && (R <= 3000))
-	return 0;
-	if ((R >= 4000))
-	return 1;
-
+	if (R <= 800)	return -1;
+	if ((R >= 2000) && (R <= 3000))	return 0;
+	if (R >= 4000) return 1;
 }
 
 
@@ -62,34 +58,36 @@ int8_t stateJoysticks(uint16_t R){
  * @retval	None
  *
  */
-void stateJoystick(uint16_t R[]){
-	if ((R[0]>=2000) && (R[0]<=3000))				//Representa si el Joystick no se mueve
-	{
-		if(sServoX != 1) sServoX = sStop;
-	}
-	if ((R[1]>=2000) && (R[1]<=3000))				//Representa si el joystick no se mueve
-	{
-		if(sServoY != 1) sServoY = sStop;
-	}
 
-	if ((R[0]>=4000))								//Representa movimientos en X: incrementando (htim2, guiño a PWM servidor)
-	{
-		if(sServoX != 0) sServoX = sAdvance;
-	}
-	if ((R[0]<=800))								//Representa movimientos en X: decrementando (htim2, guiño a PWM servidor)
-	{
-		if(sServoX != 2) sServoX = sBack;
-	}
-	if ((R[1]>=4000))								//Representa movimientos en Y: incrementando (htim3, guiño a PWM servidor)
-	{
-		if(sServoY != 0) sServoY = sAdvance;
-	}
-	if ((R[1]<=800))								//Representa movimientos en Y: decrementando (htim3, guiño a PWM servidor)
-	{
-		if(sServoY != 2) sServoY = sBack;
-	}
-}		//POSIBILIDAD DE RETORNAR UN VALOR ENTERO DEL 0 AL 6 CON LA CANTIDAD DE ESTADOS
-		//( 3 POR CADA PAR X,Y). O BIEN, VER ALGUN VALOR POR REFERENCIA
+//
+//void stateJoystick(uint16_t R[]){
+//	if ((R[0]>=2000) && (R[0]<=3000))				//Representa si el Joystick no se mueve
+//	{
+//		if(sServoX != 1) sServoX = sStop;
+//	}
+//	if ((R[1]>=2000) && (R[1]<=3000))				//Representa si el joystick no se mueve
+//	{
+//		if(sServoY != 1) sServoY = sStop;
+//	}
+//
+//	if ((R[0]>=4000))								//Representa movimientos en X: incrementando (htim2, guiño a PWM servidor)
+//	{
+//		if(sServoX != 0) sServoX = sAdvance;
+//	}
+//	if ((R[0]<=800))								//Representa movimientos en X: decrementando (htim2, guiño a PWM servidor)
+//	{
+//		if(sServoX != 2) sServoX = sBack;
+//	}
+//	if ((R[1]>=4000))								//Representa movimientos en Y: incrementando (htim3, guiño a PWM servidor)
+//	{
+//		if(sServoY != 0) sServoY = sAdvance;
+//	}
+//	if ((R[1]<=800))								//Representa movimientos en Y: decrementando (htim3, guiño a PWM servidor)
+//	{
+//		if(sServoY != 2) sServoY = sBack;
+//	}
+//}		//POSIBILIDAD DE RETORNAR UN VALOR ENTERO DEL 0 AL 6 CON LA CANTIDAD DE ESTADOS
+//		//( 3 POR CADA PAR X,Y). O BIEN, VER ALGUN VALOR POR REFERENCIA
 
 
 
