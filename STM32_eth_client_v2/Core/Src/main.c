@@ -102,9 +102,11 @@ int main(void)
 	int8_t _stateJoyY = 0;
 	uint8_t recv;
 	uint8_t snd[3];
-	char msg[60];
+	char bufmsg[60];
 	int8_t stateTx;
 	int8_t stateRx;
+
+	int8_t _state;
 
 	//AGREGAR uint8_t *bufData!!!
 
@@ -158,7 +160,7 @@ int main(void)
 		  snd[1] = _stateJoyY;
 		  snd[2] = _sirena;
 
-		  sprintf(msg,"%d,%d,%d",snd[0],snd[1],snd[2]);
+		  sprintf(bufmsg,"%d,%d,%d",snd[0],snd[1],snd[2]);
 
 		  /*
 		  * @retval -1: Bad File Number 'val = 9'
@@ -166,7 +168,7 @@ int main(void)
 		  * 			EIO: Hubo un error de I/O valor 'errno = 5'
 	 	  */
 
-		  if((stateTx = envia(socketNum, msg, (uint8_t)strlen(msg), serverIP)) == 0){
+		  if((stateTx = envia(socketNum, bufmsg, (uint8_t)strlen(bufmsg), serverIP)) == 0){
 			  //SE ENVIO TODO BIEN AVISAR POR USART
 
 		  }
@@ -182,8 +184,8 @@ int main(void)
 //		  	  //PROBLEMA AL ENVIAR DATO, VISUALIZAR POR USART
 
 		  if(estadoSocket(socketNum)){
-			  if((stateRx = recibe(socketNum, msg, (uint8_t)strlen(msg),serverIP)) == 0){
-				  translate(msg,&recv);
+			  if((stateRx = recibe(socketNum, bufmsg, (uint8_t)strlen(bufmsg),serverIP)) == 0){
+				  translate(bufmsg,&recv);
 				  if(recv == 1) parpadea();
 			  }
 			  else{
@@ -506,10 +508,10 @@ void apagaLED(void){
 	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
 }
 
-void translate (char *msg, uint8_t *rcv){
+void translate (char *bufmsg, uint8_t *rcv){
 
-	if(msg[0] == '0') *rcv = 0;				// Es lo toma entero a la comparacion.
-	if(msg[0] == '1') *rcv = 1;
+	if(bufmsg[0] == '0') *rcv = 0;				// Es lo toma entero a la comparacion.
+	if(bufmsg[0] == '1') *rcv = 1;
 }
 
 void parpadea (void){
