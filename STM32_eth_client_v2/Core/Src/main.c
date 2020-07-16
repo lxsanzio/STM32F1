@@ -47,8 +47,8 @@ DMA_HandleTypeDef hdma_adc1;
 SPI_HandleTypeDef hspi1;
 
 UART_HandleTypeDef huart1;
-static bool estadoP = false;
-uint8_t _sirena = 0;
+
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -75,7 +75,10 @@ void parpadea (void);
 /* USER CODE BEGIN 0 */
 
 uint16_t VR[2];
+uint8_t socketNum = 0;
 
+static bool estadoP = false;
+uint8_t _sirena = 0;
 
 /* USER CODE END 0 */
 
@@ -91,14 +94,17 @@ int main(void)
 	 */
 
 	uint8_t bufSize[] = {16, 0, 0, 0, 0, 0, 0, 0};
-	uint8_t socketNum = 0;
+
 	uint8_t serverIP[4] = {192, 168, 2, 192};
 
 	uint16_t count = 0;
 	int8_t _stateJoyX = 0;
 	int8_t _stateJoyY = 0;
 	uint8_t recv;
+	uint8_t snd[3];
 	char msg[60];
+	int8_t stateTx;
+	int8_t stateRx;
 
 	//AGREGAR uint8_t *bufData!!!
 
@@ -148,20 +154,46 @@ int main(void)
 		  _stateJoyX = stateJoysticks(VR[0]);
 		  _stateJoyY = stateJoysticks(VR[1]);
 
-		  if(envia(socketNum,_stateJoyX, sizeof(_stateJoyX), serverIP));
+		  snd[0] = _stateJoyX;
+		  snd[1] = _stateJoyY;
+		  snd[2] = _sirena;
+
+		  sprintf(msg,"%d,%d,%d",snd[0],snd[1],snd[2]);
+
+		  /*
+		  * @retval -1: Bad File Number 'val = 9'
+		  * 			0: Se envio el paquete completo.
+		  * 			EIO: Hubo un error de I/O valor 'errno = 5'
+	 	  */
+
+		  if((stateTx = envia(socketNum, msg, (uint8_t)strlen(msg), serverIP)) == 0){
+			  //SE ENVIO TODO BIEN AVISAR POR USART
+
+		  }
+		  else{
+
+			  //VISUALIZAR ERROR POR USART
+		  }
+			  //
 			  //PROBLEMA AL ENVIAR DATO, VISUALIZAR POR USART
-		  if(envia(socketNum,_stateJoyY, sizeof(_stateJoyX), serverIP));
-		  	  //PROBLEMA AL ENVIAR DATO, VISUALIZAR POR USART
-		  if(envia(socketNum, _sirena, sizeof(_sirena), serverIP));
-		  	  //PROBLEMA AL ENVIAR DATO, VISUALIZAR POR USART
+//		  if(envia(socketNum,_stateJoyY, sizeof(_stateJoyX), serverIP));
+//		  	  //PROBLEMA AL ENVIAR DATO, VISUALIZAR POR USART
+//		  if(envia(socketNum, _sirena, sizeof(_sirena), serverIP));
+//		  	  //PROBLEMA AL ENVIAR DATO, VISUALIZAR POR USART
 
 		  if(estadoSocket(socketNum)){
-			  if(recibe(socketNum, msg, strlen(msg),serverIP)){
+			  if((stateRx = recibe(socketNum, msg, (uint8_t)strlen(msg),serverIP)) == 0){
 				  translate(msg,&recv);
 				  if(recv == 1) parpadea();
 			  }
+			  else{
+				  //MOSTRAR POR USART EL PROBLEMA DADO POR stateRx
+			  }
 		  }
+		  recv = 0; //reinicia variable recibida. CReo innecesaria.
 	  }
+
+
 
 	  /*
 	   *
@@ -188,17 +220,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
-/*
- * CODIGO RECICLADO PARA HABILITAR UNA VEZ SE TRADUZCA LO RECIBIDO EN ENTERO
- */
-//  uint8_t i = 0;
-//  while(i < 3){
-//  prendeLED();
-//  delay(50);
-//  apagaLED();
-//  delay(50);
-//  i++;
-//  }
+
 
 
 }
@@ -462,6 +484,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			finJoystick(&hadc1);
 			estadoP = false;
 			apagaLED();
+			desconectar(socketNum);
 		}
 	}
 	if((GPIO_Pin == GPIO_PIN_13) && (estadoP ==true)){
@@ -485,8 +508,8 @@ void apagaLED(void){
 
 void translate (char *msg, uint8_t *rcv){
 
-	if(msg[0] == 0) *rcv = 0;				// Es lo toma entero a la comparacion.
-	if(msg[0] == 1) *rcv = 1;
+	if(msg[0] == '0') *rcv = 0;				// Es lo toma entero a la comparacion.
+	if(msg[0] == '1') *rcv = 1;
 }
 
 void parpadea (void){
