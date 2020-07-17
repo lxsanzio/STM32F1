@@ -202,6 +202,7 @@ int8_t recibe(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP)
  */
 
 uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP){
+	while((getSn_SR(socketNum) != SOCK_LISTEN) || (getSn_SR(socketNum) != SOCK_ESTABLISHED)){
 	if(socket(socketNum, Sn_MR_TCP, TCP_PORT, SF_TCP_NODELAY) == socketNum){
 		HAL_Delay(800);
 		if(serverIP != 0){
@@ -216,6 +217,8 @@ uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP){
 		return 3;
 	}
 	return 2;
+	}
+	return 1;
 }
 
 

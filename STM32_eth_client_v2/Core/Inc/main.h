@@ -61,7 +61,7 @@ extern UART_HandleTypeDef huart1;
 #define NETWORK_MSG  		 "Network configuration:\r\n"
 #define IP_MSG 		 		 "  IP ADDRESS:  %d.%d.%d.%d\r\n"
 #define NETMASK_MSG	         "  NETMASK:     %d.%d.%d.%d\r\n"
-#define GW_MSG 		 		 "  GATEWAY:     %d.%d.%d.%d\r\n"t
+#define GW_MSG 		 		 "  GATEWAY:     %d.%d.%d.%d\r\n"
 #define MAC_MSG		 		 "  MAC ADDRESS: %x:%x:%x:%x:%x:%x\r\n"
 #define GREETING_MSG 		 "Well done guys! Welcome to the IoT world. Bye!\r\n"	//no hace falta
 #define CONN_ESTABLISHED_MSG "Connection established with remote IP: %d.%d.%d.%d:%d\r\n"
