@@ -57,17 +57,18 @@ extern UART_HandleTypeDef huart1;
 /* USER CODE BEGIN EM */
 
 #define SEPARATOR            "=============================================\r\n"
-#define WELCOME_MSG  		 "Welcome to STM32Nucleo Ethernet configuration\r\n"
+#define WELCOME_MSG  		 "Bienvenido a STM32Nucleo Ethernet Configuracion\r\n"
 #define NETWORK_MSG  		 "Network configuration:\r\n"
 #define IP_MSG 		 		 "  IP ADDRESS:  %d.%d.%d.%d\r\n"
 #define NETMASK_MSG	         "  NETMASK:     %d.%d.%d.%d\r\n"
 #define GW_MSG 		 		 "  GATEWAY:     %d.%d.%d.%d\r\n"
 #define MAC_MSG		 		 "  MAC ADDRESS: %x:%x:%x:%x:%x:%x\r\n"
-#define GREETING_MSG 		 "Well done guys! Welcome to the IoT world. Bye!\r\n"
+#define GREETING_MSG 		 "Well done guys! Welcome to the IoT world. Bye!\r\n"	//no hace falta
 #define CONN_ESTABLISHED_MSG "Connection established with remote IP: %d.%d.%d.%d:%d\r\n"
-#define SENT_MESSAGE_MSG	 "Sent a message. Let's close the socket!\r\n"
+#define SENT_MESSAGE_MSG	 "Se envio el msj.\r\n"
 #define WRONG_RETVAL_MSG	 "Something went wrong; return value: %d\r\n"
-#define WRONG_STATUS_MSG	 "Something went wrong; STATUS: %d\r\n"
+#define WRONG_STATUS_MSG	 "Something went wrong; STATUS SOCKET: %d\r\n"
+#define WRONG_SENTVAL_MSG	 "Something went wrong; return value: %d\r\n"
 #define CONNECT_ERR_MSG		 "CONNECT Error!\r\n"
 
 #define TCP_PORT 5001
@@ -93,6 +94,28 @@ extern UART_HandleTypeDef huart1;
   sprintf(msg, GW_MSG, netInfo.gw[0], netInfo.gw[1], netInfo.gw[2], netInfo.gw[3]);										\
   HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), 100);															\
 } while(0)
+
+
+//DEFINIDO PARA ENVIAR Y RECIBIR 3 TIPOS DE RESPUESTA.  (EIO) bad, (-1) comunication
+#define PRINT_FAIL_RX(_state) do  {													\
+	sprintf(msg, WRONG_RETVAL_MSG,_state);											\
+	HAL_UART_Transmit(&huart1, (uint8_t*)msg,strlen(msg),100);						\
+} while(0)
+
+#define PRINT_FAIL_TX(_state) do {													\
+	sprintf(msg, WRONG_SENTVAL_MSG, _state);										\
+	HAL_UART_Transmit(&huart1,(uint8_t*)msg,strlen(msg),100);						\
+} while(0)
+
+#define PRINT_FAIL_STATUS_SOCK(_state) do{											\
+	sprintf(msg, WRONG_STATUS_MSG, _state);											\
+	HAL_UART_Transmit(&huart1,(uint8_t*)msg,strlen(msg),100);						\
+} while(0)
+
+
+#define PRINT_OK() do	{																			\
+	HAL_UART_Transmit(&huart1, (uint8_t*)SENT_MESSAGE_MSG, (uint16_t)strlen(SENT_MESSAGE_MSG),100);	\
+} while (0)
 
 char msg[60];
 

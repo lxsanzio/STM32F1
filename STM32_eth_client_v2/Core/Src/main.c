@@ -47,7 +47,8 @@ DMA_HandleTypeDef hdma_adc1;
 SPI_HandleTypeDef hspi1;
 
 UART_HandleTypeDef huart1;
-static bool estadoP = false;
+
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -59,7 +60,14 @@ static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART1_UART_Init(void);
+
+
 /* USER CODE BEGIN PFP */
+void prendeLED(void);
+void apagaLED(void);
+
+void translate (char *msg, uint8_t *rcv);
+void parpadea (void);
 
 /* USER CODE END PFP */
 
@@ -67,7 +75,10 @@ static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN 0 */
 
 uint16_t VR[2];
+uint8_t socketNum = 0;
 
+static bool estadoP = false;
+uint8_t _sirena = 0;
 
 /* USER CODE END 0 */
 
@@ -83,12 +94,20 @@ int main(void)
 	 */
 
 	uint8_t bufSize[] = {16, 0, 0, 0, 0, 0, 0, 0};
-	uint8_t socketNum = 0;
+
 	uint8_t serverIP[4] = {192, 168, 2, 192};
 
 	uint16_t count = 0;
-	uint8_t _stateJoyX = 0;
-	uint8_t _stateJoyY = 0;
+	int8_t _stateJoyX;
+	int8_t _stateJoyY;
+	uint8_t recv;
+	uint8_t snd[3];
+	char bufmsg[60];
+	int8_t stateTx;
+	int8_t stateRx;
+	int8_t stateRetarget;
+
+//	int8_t _state;			No hace falta se creo para el sistema las alerta UART
 
 	//AGREGAR uint8_t *bufData!!!
 
@@ -117,7 +136,11 @@ int main(void)
   MX_ADC1_Init();
   MX_SPI1_Init();
   MX_USART1_UART_Init();
+
+
   /* USER CODE BEGIN 2 */
+
+  PRINT_HEADER();
   /*
    * Inicializo modulo cliente
    */
@@ -131,39 +154,58 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+	  while(estadoP == true){
+		 if((stateRetarget = RetargetInit(socketNum,serverIP)) == 1){
+			  _stateJoyX = stateJoysticks(VR[0]);
+			  _stateJoyY = stateJoysticks(VR[1]);
+			  snd[0] = _stateJoyX;
+			  snd[1] = _stateJoyY;
+			  snd[2] = _sirena;
+			  sprintf(bufmsg,"%d,%d,%d",snd[0],snd[1],snd[2]);
+			  /*
+			  * @retval		-1: Bad File Number 'val = 9'
+			  * 			0: Se envio el paquete completo.
+			  * 			EIO: Hubo un error de I/O valor , errno = 5
+			  */
+			  if((stateTx = envia(socketNum, bufmsg, (uint8_t)strlen(bufmsg), serverIP)) == 0){
+				  PRINT_OK();
+			  }
+			  else{
+				  PRINT_FAIL_TX(stateTx);					  //VISUALIZAR ERROR POR USART
+			  }
+			  if((stateRx = estadoSocket(socketNum)) == 1){
+				  if((stateRx = recibe(socketNum, bufmsg, (uint8_t)strlen(bufmsg),serverIP)) == 0){
+					  translate(bufmsg,&recv);
+					  if(recv == 1) parpadea();
+				  }
+				  else{
+					  PRINT_FAIL_RX(stateRx);				//MOSTRAR POR USART EL PROBLEMA DADO POR stateRx
+				  }
+			  }
+			  else
+				  PRINT_FAIL_STATUS_SOCK(stateRx);
+		 }
+		 else PRINT_FAIL_STATUS_SOCK(stateRetarget);
+		 recv = 0; //reinicia variable recibida. CReo innecesaria.
+		 count++;
 
-	  if(estadoP == true){
-		  stateJoystick(VR);
-		  RetargetInit(socketNum,serverIP);
-		  _stateX = stateJoysticks(v[0]);
-		  _stateY = stateJoysticks(v[1]);
+		 if(count > 200000){
+			  //CONDICIONAL: EVITA QUE ESTÉ SIEMPRE CONECTADO CON EL SERVIDOR
+			  desconectar(socketNum);
+			  count = 0;
+			  estadoP = false;
+			  apagaLED();
+			  HAL_Delay(500);
+		 }
 	  }
 
-	  /*
-	   *
-	   * --------> IMPORTANTE
-	   * -----> VER TIEMPO DE ESTE CONTADOR. CALCULAR 30s y 50s EN
-	   * -----> EN EL OTRO
-	   */
-	  if((count > 200000) && (estadoP == true)){
-		  //CONDICIONAL: EVITA QUE ESTÉ SIEMPRE CONECTADO CON EL SERVIDOR
-		  desconectar(socketNum);
-		  count = 0;
-		  estadoP = false;
-		  HAL_Delay(500);
-	  }
 
-//	  if((count > 500000) && (estadoP == true)){
-//		 //CONDICIONAL: EVITA QUE ESTE SIEMPRE HABILITADO EL MODULO
-//		  close(socketNum);
-//		  estadoP = false;
-//		  count = 0;
-//	  }
-
-	  count++;
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
+
+
+
 }
 
 /**
@@ -415,7 +457,7 @@ static void MX_GPIO_Init(void)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(GPIO_Pin == GPIO_PIN_12){			//A COMPLETAR CON FUNCION, RECORDAR FLAG QUE CONDICIONA PIN_13
-		if(estadoP ==false){
+		if(estadoP == false){
 			initJoystick(&hadc1,VR);
 			estadoP = true;
 			prendeLED();
@@ -425,10 +467,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			finJoystick(&hadc1);
 			estadoP = false;
 			apagaLED();
+			desconectar(socketNum);
 		}
 	}
-	if((GPIO_Pin == GPIO_PIN_13) && (estadoP ==true));
-	//A COMPLETAR CON FUNCION, PIN_13 HABILITA SIRENA EN MODULO
+	//AL PRECIONAR EL BOTON DE SIRENA SE SETEA EN ACTIVO LA VARIABLE
+	if((GPIO_Pin == GPIO_PIN_13) && (estadoP ==true)){
+		if(_sirena == 0) _sirena = 1;
+		if(_sirena == 1) _sirena = 0;
+	}
+
 
 }
 
@@ -439,6 +486,23 @@ void prendeLED(void){
 
 void apagaLED(void){
 	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+}
+
+void translate (char *bufmsg, uint8_t *rcv){
+
+	if(bufmsg[0] == '0') *rcv = 0;				// Es lo toma entero a la comparacion.
+	if(bufmsg[0] == '1') *rcv = 1;
+}
+
+void parpadea (void){
+	uint8_t i =0;
+	while(i < 5){
+		apagaLED();
+		HAL_Delay(50);
+		prendeLED();
+		HAL_Delay(50);
+		i++;
+	}
 }
 
 /* USER CODE END 4 */
