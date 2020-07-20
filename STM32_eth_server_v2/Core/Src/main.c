@@ -66,6 +66,8 @@ static void MX_USART1_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+uint8_t socketNum = 0;
+
 /* USER CODE END 0 */
 
 /**
@@ -75,6 +77,19 @@ static void MX_USART1_UART_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+
+	uint8_t bufSize[] = {16, 0, 0, 0, 0, 0, 0, 0};
+	uint8_t serverIP = 0;
+
+	uint16_t count = 0;
+	int8_t _stateJoyX;
+	int8_t _stateJoyY;
+	uint8_t recv;
+	uint8_t snd[1];
+	char bufmsg[60];
+	int8_t stateTx;
+	int8_t stateRx;
+	int8_t stateRetarget;
 
   /* USER CODE END 1 */
 
@@ -102,6 +117,10 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  PRINT_HEADER();
+
+  initServer(socketNum, bufSize);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -110,7 +129,41 @@ int main(void)
   {
     /* USER CODE END WHILE */
 
+	  if((stateRetarget = RetargetInit(socketNum,serverIP)) == 1){
+		  if((stateRx = estadoSocket(socketNum)) == 1){
+			  if((stateRx = recibe(socketNum, bufmsg, (uint8_t)strlen(bufmsg),serverIP)) == 0){
+			  		translate(bufmsg,&recv);
+
+			  		// MODIFICAR. ES EL SERVIDOR. HAY 3 VARIABLES QUE INGRESAN.
+			  		//MOVIMIENTO X,
+			  		//MOVIMIENTO Y
+			  		// SIRENA-
+			  		if(recv == 1) parpadea();
+
+			   }
+			  else{
+				  PRINT_FAIL_RX(stateRx);				//MOSTRAR POR USART EL PROBLEMA DADO POR stateRx
+			  }
+		  }
     /* USER CODE BEGIN 3 */
+	  }
+
+
+	 /*
+	  * VERIFICAR ESTA PARTE, DADO QUE SI NO PUEDE INGRESAR AL 1ER CONDICIONAL NO VALE LA PENA QUE CUENTE
+	  * BUSCANDO CERRAR EL SOCKET
+	  */
+	  count++;
+
+	 if (coun > 500000){
+		 RetargetInit(socketNum, serverIP);
+	 }
+	 if(count > 200000){
+		  //CONDICIONAL: EVITA QUE ESTÉ SIEMPRE CONECTADO CON EL SERVIDOR
+		  desconectar(socketNum);
+		  count = 0;
+		  HAL_Delay(500);
+	 }
   }
   /* USER CODE END 3 */
 }
