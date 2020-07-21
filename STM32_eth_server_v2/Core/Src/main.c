@@ -63,6 +63,7 @@ static void MX_USART1_UART_Init(void);
 
 
 void translate(char* msg, int8_t* rcv);
+void sirena (uint8_t _sirena);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -83,14 +84,14 @@ int main(void)
 	uint8_t bufSize[] = {16, 0, 0, 0, 0, 0, 0, 0};
 	uint8_t serverIP = 0;
 
-	uint16_t count = 0;
+//	uint16_t count = 0;
 	int8_t _stateJoyX;
 	int8_t _stateJoyY;
 	uint8_t _stateSirena;
 	int8_t rcv[5];
-	uint8_t snd[1];
+//	uint8_t snd[1];
 	char bufmsg[60];
-	int8_t stateTx;
+//	int8_t stateTx;
 	int8_t stateRx;
 	int8_t stateRetarget;
 
@@ -128,8 +129,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
+  while (1)  {
     /* USER CODE END WHILE */
 
 	  if((stateRetarget = RetargetInit(socketNum,&serverIP)) == 1){
@@ -144,31 +144,34 @@ int main(void)
 
 			  		movServo(&htim2,_stateJoyX,1);
 			  		movServo(&htim3,_stateJoyY,2);
+			  		sirena(_stateSirena);
 
 			   }
-			  else{
+			  else
 				  PRINT_FAIL_RX(stateRx);				//MOSTRAR POR USART EL PROBLEMA DADO POR stateRx
 			  }
-		  }
-    /* USER CODE BEGIN 3 */
 	  }
+	  else PRINT_FAIL_STATUS_SOCK(stateRetarget);
+
+    /* USER CODE BEGIN 3 */
+
 
 
 	 /*
 	  * VERIFICAR ESTA PARTE, DADO QUE SI NO PUEDE INGRESAR AL 1ER CONDICIONAL NO VALE LA PENA QUE CUENTE
 	  * BUSCANDO CERRAR EL SOCKET
-	  */
-	  count++;
-
-	 if (count > 500000){
-		 RetargetInit(socketNum, &serverIP);
-	 }
-	 if(count > 200000){
-		  //CONDICIONAL: EVITA QUE ESTÉ SIEMPRE CONECTADO CON EL SERVIDOR
-		  desconectar(socketNum);
-		  count = 0;
-		  HAL_Delay(500);
-	 }
+//	  */
+//	  count++;
+//
+//	 if (count < 50000){
+//		 RetargetInit(socketNum, &serverIP);
+//		 count = 0;
+//	 }
+//	 if(count < 20000){
+//		  //CONDICIONAL: EVITA QUE ESTÉ SIEMPRE CONECTADO CON EL SERVIDOR
+//		  desconectar(socketNum);
+//		  HAL_Delay(500);
+//	 }
   }
   /* USER CODE END 3 */
 }
@@ -448,7 +451,10 @@ void translate(char* msg, int8_t* rcv){
 	}
 }
 
-
+void sirena (uint8_t _sirena){
+	if(_sirena == 1) HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+	if(_sirena == 0) HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+}
 
 /* USER CODE END 4 */
 

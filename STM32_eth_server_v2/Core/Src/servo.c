@@ -27,18 +27,16 @@ void finishServo(TIM_HandleTypeDef* htim2, TIM_HandleTypeDef* htim3){
 
 /*
  * @brief	Movimiento de Servo
- * @param	ht estructura de temporizador tipo PWM. State es el estado si debe sumar,
- * 			mantener o restar una variable de estado que determina si debe girar el
- * 			servo para un lado o hacia el otro. Channel es el canal definido del PWM,
- * 			htim2 definido con channel 1, htim3 definido en channel 2.
+ * @param	ht puntero a estructura de temporizador tipo PWM. State es el estado si
+ * 			debe sumar,	mantener o restar una variable de estado que determina si debe
+ * 			girar el servo para un lado o hacia el otro. Channel es el canal
+ * 			definido del PWM, htim2 definido con channel 1, htim3 definido en channel 2.
  * @note	Tiene incorporado un condiiconal que limita el movimiento del servo. No
  * 			permite que se supere por encima o por debajo de tal limites.
  * @retval	none
  */
 
 void movServo(TIM_HandleTypeDef *ht, int8_t state, uint8_t channel){
-
-//	extern static uint8_t serv[];
 	if(channel == 1){
 		switch(state){
 			case -1:
