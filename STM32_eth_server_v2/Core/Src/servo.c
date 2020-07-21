@@ -7,8 +7,10 @@
 
 #include "servo.h"
 
-extern TIM_HandleTypeDef htim2;
-extern TIM_HandleTypeDef htim3;
+//extern TIM_HandleTypeDef htim2;
+//extern TIM_HandleTypeDef htim3;
+
+uint8_t serv[2] = {75,75};
 
 
 //OJO AL TEJO PERRITO, NO VALLA A SER COSA QUE NECESITE ENVIAR TIM_CHANNEL_1 DADO QUE SE
@@ -34,66 +36,70 @@ void finishServo(TIM_HandleTypeDef* htim2, TIM_HandleTypeDef* htim3){
  * @retval	none
  */
 
-void movServ(TIM_HandleTypeDef *ht, int8_t state, uint8_t channel){
+void movServo(TIM_HandleTypeDef *ht, int8_t state, uint8_t channel){
+
+//	extern static uint8_t serv[];
 	if(channel == 1){
 		switch(state){
 			case -1:
-				if(i <= 25) ht->Instance->CCR1 = i;
-				else ht->Instance->CCR1 = i--;
+				if(serv[0] <= 25) ht->Instance->CCR1 = serv[0];
+				else ht->Instance->CCR1 = serv[0]--;
 				break;
 			case 0:
-				ht->Instance->CCR1 = i;
+				ht->Instance->CCR1 = serv[0];
 				break;
 			case 1:
-				if(i >= 125) ht->Instance->CCR1 = i;
-				ht->Instance->CCR1 = i++;
+				if(serv[0] >= 125) ht->Instance->CCR1 = serv[0];
+				ht->Instance->CCR1 = serv[0]++;
 				break;
 		}
 	}
 	if(channel == 2){
 		switch(state){
 			case -1:
-				if(j <= 25) ht->Instance->CCR2 = j;
-				else ht->Instance->CCR2 = j--;
+				if(serv[1] <= 25) ht->Instance->CCR2 = serv[1];
+				else ht->Instance->CCR2 = serv[1]--;
 				break;
 			case 0:
-				ht->Instance->CCR2 = j;
+				ht->Instance->CCR2 = serv[1];
 				break;
 			case 1:
-				if(j >= 125) ht->Instance->CCR2 = j;
-				else ht->Instance->CCR2 = j++;
+				if(serv[1] >= 125) ht->Instance->CCR2 = serv[1];
+				else ht->Instance->CCR2 = serv[1]++;
 				break;
 		}
 	}
 }
-void movServo(TIM_HandleTypeDef* htim2,TIM_HandleTypeDef* htim3, int8_t stateX, int8_t stateY){
-	switch(stateX){
-		case -1:
-			if(i <= 25) htim2->Instance->CCR1 = i;
-			else htim2->Instance->CCR1 = i--;
-			break;
-		case 0:
-			htim2->Instance->CCR1 = i;
-			break;
-		case 1:
-			if(i >= 125) htim2->Instance->CCR1 = i;
-			htim2->Instance->CCR1 = i++;
-			break;
-	}
-	switch(stateY){
-		case -1:
-			if(j <= 25) htim3->Instance->CCR2 = j;
-			else htim3->Instance->CCR2 = j--;
-			break;
-		case 0:
-			htim3->Instance->CCR2 = j;
-			break;
-		case 1:
-			if(j >= 125) htim3->Instance->CCR2 = j;
-			else htim3->Instance->CCR2 = j++;
-			break;
-	}
-}
+
+
+//void movServo(TIM_HandleTypeDef* htim2,TIM_HandleTypeDef* htim3, int8_t stateX, int8_t stateY){
+//	switch(stateX){
+//		case -1:
+//			if(serv[0] <= 25) htim2->Instance->CCR1 = serv[0];
+//			else htim2->Instance->CCR1 = serv[0]--;
+//			break;
+//		case 0:
+//			htim2->Instance->CCR1 = serv[0];
+//			break;
+//		case 1:
+//			if(serv[0] >= 125) htim2->Instance->CCR1 = serv[0];
+//			htim2->Instance->CCR1 = serv[0]++;
+//			break;
+//	}
+//	switch(stateY){
+//		case -1:
+//			if(serv[1] <= 25) htim3->Instance->CCR2 = serv[1];
+//			else htim3->Instance->CCR2 = serv[1]--;
+//			break;
+//		case 0:
+//			htim3->Instance->CCR2 = serv[1];
+//			break;
+//		case 1:
+//			if(serv[1] >= 125) htim3->Instance->CCR2 = serv[1];
+//			else htim3->Instance->CCR2 = serv[1]++;
+//			break;
+//	}
+//}
 
 //
 //  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); 	// Se asocia al eje X

@@ -61,6 +61,8 @@ static void MX_TIM3_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
+
+void translate(char* msg, int8_t* rcv);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -84,7 +86,8 @@ int main(void)
 	uint16_t count = 0;
 	int8_t _stateJoyX;
 	int8_t _stateJoyY;
-	uint8_t recv;
+	uint8_t _stateSirena;
+	int8_t rcv[5];
 	uint8_t snd[1];
 	char bufmsg[60];
 	int8_t stateTx;
@@ -129,16 +132,18 @@ int main(void)
   {
     /* USER CODE END WHILE */
 
-	  if((stateRetarget = RetargetInit(socketNum,serverIP)) == 1){
+	  if((stateRetarget = RetargetInit(socketNum,&serverIP)) == 1){
 		  if((stateRx = estadoSocket(socketNum)) == 1){
-			  if((stateRx = recibe(socketNum, bufmsg, (uint8_t)strlen(bufmsg),serverIP)) == 0){
-			  		translate(bufmsg,&recv);
+			  initServo(&htim2,&htim3);
+			  if((stateRx = recibe(socketNum, bufmsg, (uint8_t)strlen(bufmsg),&serverIP)) == 0){
+			  		translate(bufmsg,rcv);
 
-			  		// MODIFICAR. ES EL SERVIDOR. HAY 3 VARIABLES QUE INGRESAN.
-			  		//MOVIMIENTO X,
-			  		//MOVIMIENTO Y
-			  		// SIRENA-
-			  		if(recv == 1) parpadea();
+			  		_stateJoyX = rcv[0];
+			  		_stateJoyY = rcv[1];
+			  		_stateSirena = rcv[2];
+
+			  		movServo(&htim2,_stateJoyX,1);
+			  		movServo(&htim3,_stateJoyY,2);
 
 			   }
 			  else{
@@ -155,8 +160,8 @@ int main(void)
 	  */
 	  count++;
 
-	 if (coun > 500000){
-		 RetargetInit(socketNum, serverIP);
+	 if (count > 500000){
+		 RetargetInit(socketNum, &serverIP);
 	 }
 	 if(count > 200000){
 		  //CONDICIONAL: EVITA QUE ESTÉ SIEMPRE CONECTADO CON EL SERVIDOR
@@ -412,6 +417,38 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void translate(char* msg, int8_t* rcv){
+	static uint8_t i, j;
+	j = 0;
+	for(i = 0 ; i < 9 ; i++ ){
+		while(j < 3){
+			if(msg[i] == '0'){
+				rcv[j] = 0;
+				j++;
+			}
+			if(msg[i] == '1') {
+				rcv[j] = 1;
+				j++;
+			}
+			if(msg[i] == '2') {
+				rcv[j] = 2;
+				j++;
+			}
+			if(msg[i] == '3') {
+				rcv[j] = 3;
+				j++;
+			}
+			if(msg[i] == '-') {
+				rcv[j] = -1;
+				j++;
+				i++;
+			}
+		}
+	}
+}
+
+
 
 /* USER CODE END 4 */
 
