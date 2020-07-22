@@ -33,10 +33,16 @@ extern "C" {
 #include <stdlib.h>
 #include <string.h>
 
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "wizchip_conf.h"
+#include "w5500.h"
+#include "socket.h"
+
 
 #include "conectar.h"
+#include "servo.h"
 
 /* USER CODE END Includes */
 

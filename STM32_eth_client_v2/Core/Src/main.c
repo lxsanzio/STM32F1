@@ -97,7 +97,7 @@ int main(void)
 
 	uint8_t serverIP[4] = {192, 168, 2, 192};
 
-	uint16_t count = 0;
+//	uint16_t count = 0;
 	int8_t _stateJoyX;
 	int8_t _stateJoyY;
 	uint8_t recv;
@@ -105,6 +105,7 @@ int main(void)
 	char bufmsg[60];
 	int8_t stateTx;
 	int8_t stateRx;
+	int8_t stateSocket;
 	int8_t stateRetarget;
 
 //	int8_t _state;			No hace falta se creo para el sistema las alerta UART
@@ -173,7 +174,7 @@ int main(void)
 			  else{
 				  PRINT_FAIL_TX(stateTx);					  //VISUALIZAR ERROR POR USART
 			  }
-			  if((stateRx = estadoSocket(socketNum)) == 1){
+			  if((stateSocket = estadoSocket(socketNum)) == 1){		//HAY DATOS EN EL STACK
 				  if((stateRx = recibe(socketNum, bufmsg, (uint8_t)strlen(bufmsg),serverIP)) == 0){
 					  translate(bufmsg,&recv);
 					  if(recv == 1) parpadea();
@@ -186,17 +187,18 @@ int main(void)
 				  PRINT_FAIL_STATUS_SOCK(stateRx);
 		 }
 		 else PRINT_FAIL_STATUS_SOCK(stateRetarget);
-		 recv = 0; //reinicia variable recibida. CReo innecesaria.
-		 count++;
 
-		 if(count > 200000){
-			  //CONDICIONAL: EVITA QUE ESTÉ SIEMPRE CONECTADO CON EL SERVIDOR
-			  desconectar(socketNum);
-			  count = 0;
-			  estadoP = false;
-			  apagaLED();
-			  HAL_Delay(500);
-		 }
+		 recv = 0; //reinicia variable recibida. CReo innecesaria.
+//		 count++;
+//
+//		 if(count > 200000){
+//			  //CONDICIONAL: EVITA QUE ESTÉ SIEMPRE CONECTADO CON EL SERVIDOR
+//			  desconectar(socketNum);
+//			  count = 0;
+//			  estadoP = false;
+//			  apagaLED();
+//			  HAL_Delay(500);
+//		 }
 	  }
 
 
