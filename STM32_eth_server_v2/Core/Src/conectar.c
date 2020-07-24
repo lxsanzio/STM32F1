@@ -52,7 +52,7 @@ void initClient(uint8_t socketNum, uint8_t* bufSize){
 	reg_wizchip_cs_cbfunc(cs_sel, cs_desel);
 	reg_wizchip_spi_cbfunc(spi_rb, spi_wb);
 	wizchip_init(bufSize, bufSize);
-	wiz_NetInfo netInfo = { .mac		= {0x00, 0x08, 0xdc, 0xab, 0xef}, //Mac Addres
+	wiz_NetInfo netInfo = { .mac		= {0x00, 0x11, 0x08, 0xdc, 0xab, 0xef}, //Mac Addres
 							.ip 		= {192, 168, 2, 191},
 							.sn			= {255, 255, 255, 0},
 							.gw			= {192, 168, 2, 1} };

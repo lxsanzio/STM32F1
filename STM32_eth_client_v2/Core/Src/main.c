@@ -527,8 +527,13 @@ void apagaLED(void){
 
 void translate (char *bufmsg, uint8_t *rcv){
 
-	if(bufmsg[0] == '0') *rcv = 0;				// Es lo toma entero a la comparacion.
-	if(bufmsg[0] == '1') *rcv = 1;
+	if(*bufmsg == 48) *rcv = 0;				// Es lo toma entero a la comparacion.
+	if(*bufmsg == 49) *rcv = 1;
+
+	/*	CODIGOS ASCII
+	 * 48 = 0
+	 * 49 = 1
+	 */
 }
 
 void parpadea (void){

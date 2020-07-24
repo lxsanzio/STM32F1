@@ -438,29 +438,26 @@ void translate(char* msg, int8_t* rcv){
 	static uint8_t i, j;
 	j = 0;
 	for(i = 0 ; i < 9 ; i++ ){
-		while(j < 3){
-			if(msg[i] == '0'){
+
+			if(*(msg+i) == 48){
 				rcv[j] = 0;
 				j++;
 			}
-			if(msg[i] == '1') {
+			if(*(msg+i) == 49) {
 				rcv[j] = 1;
 				j++;
 			}
-			if(msg[i] == '2') {
+			if(*(msg+i) == 50) {
 				rcv[j] = 2;
 				j++;
 			}
-			if(msg[i] == '3') {
+			if(*(msg+i) == 51) {
 				rcv[j] = 3;
 				j++;
 			}
-			if(msg[i] == '-') {
-				rcv[j] = -1;
-				j++;
-				i++;
-			}
-		}
+			if(j == 3) i = 8;
+
+
 	}
 }
 
