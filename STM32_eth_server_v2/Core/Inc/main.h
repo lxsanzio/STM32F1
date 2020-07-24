@@ -76,6 +76,7 @@ extern UART_HandleTypeDef huart1;
 #define WRONG_STATUS_MSG	 "Something went wrong; STATUS SOCKET: %d\r\n"
 #define WRONG_SENTVAL_MSG	 "Something went wrong; return value: %d\r\n"
 #define CONNECT_ERR_MSG		 "CONNECT Error!\r\n"
+#define STATUS_SOCKET_SERVER "STATUS SOCKET: %d\r\n"
 
 #define TCP_PORT 5001
 
@@ -118,9 +119,18 @@ extern UART_HandleTypeDef huart1;
 	HAL_UART_Transmit(&huart1,(uint8_t*)msg,strlen(msg),100);						\
 } while(0)
 
+#define PRINT_STATUS_SOCK_SERVER(_state) do{											\
+	sprintf(msg, STATUS_SOCKET_SERVER, _state);											\
+	HAL_UART_Transmit(&huart1,(uint8_t*)msg,strlen(msg),100);						\
+} while(0)
+
 
 #define PRINT_OK() do	{																			\
 	HAL_UART_Transmit(&huart1, (uint8_t*)SENT_MESSAGE_MSG, (uint16_t)strlen(SENT_MESSAGE_MSG),100);	\
+} while (0)
+
+#define PRINT_OK2() do	{																			\
+	HAL_UART_Transmit(&huart1, (uint8_t*)GREETING_MSG, (uint16_t)strlen(GREETING_MSG),100);	\
 } while (0)
 
 char msg[60];

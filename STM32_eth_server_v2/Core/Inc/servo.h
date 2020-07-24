@@ -17,6 +17,6 @@
 void initServo(TIM_HandleTypeDef* htim2, TIM_HandleTypeDef* htim3);
 void finishServo(TIM_HandleTypeDef* htim2, TIM_HandleTypeDef* htim3);
 
-void movServo(TIM_HandleTypeDef *ht, int8_t state, uint8_t channel);
+void movServo(TIM_HandleTypeDef *ht, uint8_t state, uint8_t channel);
 
 #endif /* INC_SERVO_H_ */

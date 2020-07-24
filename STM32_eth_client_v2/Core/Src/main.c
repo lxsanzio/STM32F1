@@ -61,6 +61,35 @@ static void MX_ADC1_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART1_UART_Init(void);
 
+/*
+// * PRUEBA
+// */
+//void cs_sel() {
+//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET); //CS LOW
+//}
+//
+//void cs_desel() {
+//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET); //CS HIGH
+//}
+//
+//uint8_t spi_rb(void) {
+//	uint8_t rbuf;
+//	HAL_SPI_Receive(&hspi1, &rbuf, 1, 0xFFFFFFFF);
+//	return rbuf;
+//}
+//
+//void spi_wb(uint8_t b) {
+//	HAL_SPI_Transmit(&hspi1, &b, 1, 0xFFFFFFFF);
+//}
+//
+/*
+ * FIN DE PRUEBA
+ */
+
+
+void SwitchLED (){
+	HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+}
 
 /* USER CODE BEGIN PFP */
 void prendeLED(void);
@@ -86,14 +115,13 @@ uint8_t _sirena = 0;
   * @brief  The application entry point.
   * @retval int
   */
-int main(void)
-{
+int main(void){
   /* USER CODE BEGIN 1 */
 	/*
 	 * VARIABLES PARA DEFINICION DE CONEXION TCP
 	 */
 
-	uint8_t bufSize[] = {16, 0, 0, 0, 0, 0, 0, 0};
+	uint8_t bufSize[] = {2, 0, 0, 0, 0, 0, 0, 0};
 
 	uint8_t serverIP[4] = {192, 168, 2, 192};
 
@@ -128,7 +156,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-  initClient(socketNum, bufSize);
+//  initClient(socketNum, bufSize);
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -147,6 +175,7 @@ int main(void)
    */
   initClient(socketNum, bufSize);
 
+  apagaLED();
 
   /* USER CODE END 2 */
 
@@ -155,7 +184,9 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  while(estadoP == true){
+
+	  	  while(estadoP == true){
+		  __NOP();
 		 if((stateRetarget = RetargetInit(socketNum,serverIP)) == 1){
 			  _stateJoyX = stateJoysticks(VR[0]);
 			  _stateJoyY = stateJoysticks(VR[1]);
@@ -168,6 +199,9 @@ int main(void)
 			  * 			0: Se envio el paquete completo.
 			  * 			EIO: Hubo un error de I/O valor , errno = 5
 			  */
+
+			  //mostrar lo que se va a enviar.
+			  PRINT_STR(bufmsg);
 			  if((stateTx = envia(socketNum, bufmsg, (uint8_t)strlen(bufmsg), serverIP)) == 0){
 				  PRINT_OK();
 			  }
@@ -184,9 +218,10 @@ int main(void)
 				  }
 			  }
 			  else
-				  PRINT_FAIL_STATUS_SOCK(stateRx);
+				  PRINT_FAIL_STATUS_SOCK(stateSocket);
 		 }
 		 else PRINT_FAIL_STATUS_SOCK(stateRetarget);
+		 HAL_Delay(500);
 
 		 recv = 0; //reinicia variable recibida. CReo innecesaria.
 //		 count++;
@@ -483,11 +518,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 
 void prendeLED(void){
-	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
 }
 
 void apagaLED(void){
-	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
 }
 
 void translate (char *bufmsg, uint8_t *rcv){

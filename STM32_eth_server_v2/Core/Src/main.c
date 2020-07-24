@@ -84,7 +84,7 @@ int main(void)
 	uint8_t bufSize[] = {16, 0, 0, 0, 0, 0, 0, 0};
 	uint8_t serverIP = 0;
 
-//	uint16_t count = 0;
+	uint16_t count = 0;
 	int8_t _stateJoyX;
 	int8_t _stateJoyY;
 	uint8_t _stateSirena;
@@ -94,6 +94,7 @@ int main(void)
 //	int8_t stateTx;
 	int8_t stateRx;
 	int8_t stateRetarget;
+	uint8_t statusSocket;
 
   /* USER CODE END 1 */
 
@@ -136,7 +137,8 @@ int main(void)
 		  if((stateRx = estadoSocket(socketNum)) == 1){
 			  initServo(&htim2,&htim3);
 			  if((stateRx = recibe(socketNum, bufmsg, (uint8_t)strlen(bufmsg),&serverIP)) == 0){
-			  		translate(bufmsg,rcv);
+
+				  translate(bufmsg,rcv);
 
 			  		_stateJoyX = rcv[0];
 			  		_stateJoyY = rcv[1];
@@ -145,11 +147,22 @@ int main(void)
 			  		movServo(&htim2,_stateJoyX,1);
 			  		movServo(&htim3,_stateJoyY,2);
 			  		sirena(_stateSirena);
+			  		PRINT_OK2();
+			  		PRINT_STR(bufmsg);
 
 			   }
 			  else
 				  PRINT_FAIL_RX(stateRx);				//MOSTRAR POR USART EL PROBLEMA DADO POR stateRx
 			  }
+		  statusSocket = getSn_SR(socketNum);
+		  if(statusSocket == SOCK_LISTEN){		//CUENTA HASTA 100 Y MUESTRA STATUS SOCKET 1
+			  count++;
+			  if(count == 100){
+				  PRINT_STATUS_SOCK_SERVER(stateRetarget);
+			  }
+		  }
+
+		  HAL_Delay(200);
 	  }
 	  else PRINT_FAIL_STATUS_SOCK(stateRetarget);
 
@@ -398,7 +411,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4|GPIO_PIN_8, GPIO_PIN_RESET);
@@ -452,8 +465,8 @@ void translate(char* msg, int8_t* rcv){
 }
 
 void sirena (uint8_t _sirena){
-	if(_sirena == 1) HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-	if(_sirena == 0) HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+	if(_sirena == 1) HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+	if(_sirena == 0) HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
 }
 
 /* USER CODE END 4 */

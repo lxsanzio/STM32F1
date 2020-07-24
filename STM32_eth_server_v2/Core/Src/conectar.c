@@ -53,7 +53,7 @@ void initClient(uint8_t socketNum, uint8_t* bufSize){
 	reg_wizchip_spi_cbfunc(spi_rb, spi_wb);
 	wizchip_init(bufSize, bufSize);
 	wiz_NetInfo netInfo = { .mac		= {0x00, 0x08, 0xdc, 0xab, 0xef}, //Mac Addres
-							.ip 		= {192, 168, 2, 192},
+							.ip 		= {192, 168, 2, 191},
 							.sn			= {255, 255, 255, 0},
 							.gw			= {192, 168, 2, 1} };
 	 do {
@@ -202,12 +202,19 @@ int8_t recibe(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP)
  */
 
 uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP){
-	while((getSn_SR(socketNum) != SOCK_LISTEN) || (getSn_SR(socketNum) != SOCK_ESTABLISHED)){
-	if(socket(socketNum, Sn_MR_TCP, TCP_PORT, SF_TCP_NODELAY) == socketNum){
+	uint16_t server_port = 5001;
+	uint8_t statusSocket;
+
+
+	statusSocket = getSn_SR(socketNum);
+//	while((getSn_SR(socketNum) != SOCK_LISTEN) || (getSn_SR(socketNum) != SOCK_ESTABLISHED)){
+	while((statusSocket != 20)){// || (statusSocket != 23)){
+
+	if(socket(socketNum, Sn_MR_TCP, server_port, SF_TCP_NODELAY) == socketNum){
 		HAL_Delay(800);
-		if(serverIP != 0){
-			if(connect(socketNum,serverIP,TCP_PORT) == SOCK_OK)
-				return 1 ;
+		if(*serverIP != 0){
+			if(connect(socketNum,serverIP,server_port) == SOCK_OK)
+		return 1 ;
 			return 0;
 		}
 		else{

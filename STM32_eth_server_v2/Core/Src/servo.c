@@ -18,6 +18,8 @@ uint8_t serv[2] = {75,75};
 void initServo(TIM_HandleTypeDef* htim2, TIM_HandleTypeDef* htim3){
 	HAL_TIM_PWM_Start(htim2, TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start(htim3, TIM_CHANNEL_2);
+	htim2->Instance->CCR1 = serv[0];
+	htim3->Instance->CCR2 = serv[1];
 }
 
 void finishServo(TIM_HandleTypeDef* htim2, TIM_HandleTypeDef* htim3){
@@ -36,17 +38,17 @@ void finishServo(TIM_HandleTypeDef* htim2, TIM_HandleTypeDef* htim3){
  * @retval	none
  */
 
-void movServo(TIM_HandleTypeDef *ht, int8_t state, uint8_t channel){
+void movServo(TIM_HandleTypeDef *ht, uint8_t state, uint8_t channel){
 	if(channel == 1){
 		switch(state){
-			case -1:
+			case 0:
 				if(serv[0] <= 25) ht->Instance->CCR1 = serv[0];
 				else ht->Instance->CCR1 = serv[0]--;
 				break;
-			case 0:
+			case 1:
 				ht->Instance->CCR1 = serv[0];
 				break;
-			case 1:
+			case 2:
 				if(serv[0] >= 125) ht->Instance->CCR1 = serv[0];
 				ht->Instance->CCR1 = serv[0]++;
 				break;
@@ -54,14 +56,14 @@ void movServo(TIM_HandleTypeDef *ht, int8_t state, uint8_t channel){
 	}
 	if(channel == 2){
 		switch(state){
-			case -1:
+			case -0:
 				if(serv[1] <= 25) ht->Instance->CCR2 = serv[1];
 				else ht->Instance->CCR2 = serv[1]--;
 				break;
-			case 0:
+			case 1:
 				ht->Instance->CCR2 = serv[1];
 				break;
-			case 1:
+			case 2:
 				if(serv[1] >= 125) ht->Instance->CCR2 = serv[1];
 				else ht->Instance->CCR2 = serv[1]++;
 				break;

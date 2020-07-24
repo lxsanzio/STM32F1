@@ -83,7 +83,7 @@ void initServer(uint8_t socketNum, uint8_t* bufSize){
 	reg_wizchip_cs_cbfunc(cs_sel, cs_desel);
 	reg_wizchip_spi_cbfunc(spi_rb, spi_wb);
 	wizchip_init(bufSize, bufSize);
-	wiz_NetInfo netInfo = { .mac		= {0x00, 0x08, 0xdc, 0xab, 0xff}, //Mac Addres
+	wiz_NetInfo netInfo = { .mac		= {0x00, 0x08, 0xdc, 0xab, 0xff}, //Mac Addres Cliente
 							.ip 		= {192, 168, 2, 192},
 							.sn			= {255, 255, 255, 0},
 							.gw			= {192, 168, 2, 1} };
@@ -104,7 +104,7 @@ void initServer(uint8_t socketNum, uint8_t* bufSize){
  * 	@retval	0: No hay datos que recibir
  * 			1: Hay datos el stack RX
  */
-uint8_t estadoSocket(uint8_t socketNum){
+int8_t estadoSocket(uint8_t socketNum){  //cambiar a entero con signo
 	uint16_t len;
 	len = getSn_RX_RSR(socketNum);
 	if (len > 0) 	return 1;
@@ -202,13 +202,26 @@ int8_t recibe(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP)
  */
 
 uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP){
-	while((getSn_SR(socketNum) != SOCK_LISTEN) || (getSn_SR(socketNum) != SOCK_ESTABLISHED)){
-	if(socket(socketNum, Sn_MR_TCP, TCP_PORT, SF_TCP_NODELAY) == socketNum){
+	uint16_t server_port = 5001;
+	uint8_t statusSocket;
+	uint8_t statusConnect;
+
+	statusSocket = getSn_SR(socketNum);
+	while((statusSocket != SOCK_ESTABLISHED)){
+
+
+	if(socket(socketNum, Sn_MR_TCP, server_port, SF_TCP_NODELAY) == socketNum){
+
 		HAL_Delay(800);
-		if(serverIP != 0){
-			if(connect(socketNum,serverIP,TCP_PORT) == SOCK_OK)
+		if(*serverIP != 0){
+			uint8_t socketStatus;
+			uint8_t serverIp[4] = {192, 168, 2, 192};
+			socketStatus = getSn_SR(socketNum);
+			HAL_Delay(1000);
+
+			if((statusConnect = connect(socketNum,serverIp,server_port)) == SOCK_OK)
 				return 1 ;
-			return 0;
+		return 0;
 		}
 		else{
 			if(listen(socketNum) == SOCK_OK)
@@ -216,6 +229,7 @@ uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP){
 		}
 		return 3;
 	}
+
 	return 2;
 	}
 	return 1;
