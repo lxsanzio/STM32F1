@@ -134,7 +134,7 @@ int main(void){
 	int8_t stateTx;
 	int8_t stateRx;
 	int8_t stateSocket;
-	int8_t stateRetarget;
+	uint8_t stateRetarget;
 
 //	int8_t _state;			No hace falta se creo para el sistema las alerta UART
 
@@ -188,6 +188,7 @@ int main(void){
 	  	  while(estadoP == true){
 		  __NOP();
 		 if((stateRetarget = RetargetInit(socketNum,serverIP)) == 1){
+			 HAL_Delay(50);
 			  _stateJoyX = stateJoysticks(VR[0]);
 			  _stateJoyY = stateJoysticks(VR[1]);
 			  snd[0] = _stateJoyX;
@@ -221,7 +222,7 @@ int main(void){
 				  PRINT_FAIL_STATUS_SOCK(stateSocket);
 		 }
 		 else PRINT_FAIL_STATUS_SOCK(stateRetarget);
-		 HAL_Delay(500);
+		 HAL_Delay(80);
 
 		 recv = 0; //reinicia variable recibida. CReo innecesaria.
 //		 count++;

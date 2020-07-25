@@ -52,7 +52,7 @@ void initClient(uint8_t socketNum, uint8_t* bufSize){
 	reg_wizchip_cs_cbfunc(cs_sel, cs_desel);
 	reg_wizchip_spi_cbfunc(spi_rb, spi_wb);
 	wizchip_init(bufSize, bufSize);
-	wiz_NetInfo netInfo = { .mac		= {0x00, 0x08, 0xdc, 0xab, 0xef}, //Mac Addres
+	wiz_NetInfo netInfo = { .mac		= {0x00, 0x11, 0x08, 0xdc, 0xab, 0xef}, //Mac Addres
 							.ip 		= {192, 168, 2, 191},
 							.sn			= {255, 255, 255, 0},
 							.gw			= {192, 168, 2, 1} };
@@ -63,6 +63,7 @@ void initClient(uint8_t socketNum, uint8_t* bufSize){
 
 	wizchip_setnetinfo(&netInfo);
 	wizchip_getnetinfo(&netInfo);
+	HAL_Delay(300);
 	PRINT_NETINFO(netInfo);				//VISUALIZA POR USART LOS PARAMETROS DE RED
 }
 /*
@@ -94,6 +95,7 @@ void initServer(uint8_t socketNum, uint8_t* bufSize){
 
 	wizchip_setnetinfo(&netInfo);
 	wizchip_getnetinfo(&netInfo);
+	HAL_Delay(300);
 	PRINT_NETINFO(netInfo);				//VISUALIZA POR USART LOS PARAMETROS DE RED
 }
 
@@ -175,6 +177,7 @@ int8_t recibe(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP)
 	}
 	else{
 		close(socketNum);
+		HAL_Delay(100);
 		RetargetInit(socketNum, serverIP);
 	}
 	errno = EBADF;
@@ -220,7 +223,8 @@ uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP){
 			HAL_Delay(1000);
 
 			if((statusConnect = connect(socketNum,serverIp,server_port)) == SOCK_OK)
-				return 1 ;
+				HAL_Delay(500);
+				return 1;
 		return 0;
 		}
 		else{

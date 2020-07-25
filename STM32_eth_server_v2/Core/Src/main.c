@@ -88,14 +88,14 @@ int main(void)
 	int8_t _stateJoyX;
 	int8_t _stateJoyY;
 	uint8_t _stateSirena;
-	int8_t rcv[5];
+	int8_t rcv[3];
 //	uint8_t snd[1];
 	char bufmsg[60];
 //	int8_t stateTx;
 	int8_t stateRx;
-	int8_t stateRetarget;
+	uint8_t stateRetarget;
 	uint8_t statusSocket;
-
+	uint16_t len;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -125,7 +125,7 @@ int main(void)
   PRINT_HEADER();
 
   initServer(socketNum, bufSize);
-
+  initServo(&htim2,&htim3);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -134,8 +134,13 @@ int main(void)
     /* USER CODE END WHILE */
 
 	  if((stateRetarget = RetargetInit(socketNum,&serverIP)) == 1){
-		  if((stateRx = estadoSocket(socketNum)) == 1){
-			  initServo(&htim2,&htim3);
+//		  if((stateRx = estadoSocket(socketNum)) == 1){
+		  HAL_Delay(20);
+			if((len = getSn_RX_RSR(socketNum)) > 0) {
+
+
+
+
 			  if((stateRx = recibe(socketNum, bufmsg, (uint8_t)strlen(bufmsg),&serverIP)) == 0){
 
 				  translate(bufmsg,rcv);
@@ -162,14 +167,7 @@ int main(void)
 			  }
 		  }
 
-		  HAL_Delay(200);
-	  }
-	  else PRINT_FAIL_STATUS_SOCK(stateRetarget);
-
-    /* USER CODE BEGIN 3 */
-
-
-
+		  HAL_Delay(80);
 	 /*
 	  * VERIFICAR ESTA PARTE, DADO QUE SI NO PUEDE INGRESAR AL 1ER CONDICIONAL NO VALE LA PENA QUE CUENTE
 	  * BUSCANDO CERRAR EL SOCKET
@@ -188,7 +186,7 @@ int main(void)
   }
   /* USER CODE END 3 */
 }
-
+}
 /**
   * @brief System Clock Configuration
   * @retval None
