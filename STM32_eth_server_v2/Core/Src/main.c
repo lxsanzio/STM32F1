@@ -154,7 +154,7 @@ int main(void)
 		 movServo(&htim3,_stateJoyY,2);
 		 sirena(_stateSirena);
 
-		 PRINT_OK2();
+//		 PRINT_OK2();
 
 		  break;
 	  case SOCK_CLOSE_WAIT:
