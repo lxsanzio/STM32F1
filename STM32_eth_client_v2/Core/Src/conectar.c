@@ -113,6 +113,62 @@ int8_t estadoSocket(uint8_t socketNum){  //cambiar a entero con signo
 	else 	return 0;
 }
 
+
+/*
+ * @brief	Recargador de Inicio
+ * @param	socketNum: entero sin signo que identifica el socket del modulo
+ * 			serverIP: array de entero. La direccion IP del server en caso.
+ * 					 el modulo w5500 tiene stack, que de hasta 16Kb de memoria maximo
+ * 					 de asignación total entre la suma de los socket.
+ * 					 SI ES CLIENTE, IGUALAR PREVIAMENTE A CERO "serverIP = 0" O EN EL MOMENTO
+ * 					 DE HACER LA LLAMADA A LA FUNCION PASAR PARAMETRO 0
+ * 		 	serverIP: array entero sin signo que se pasa por referencia en funcion connect().
+ * @retval	0: No se pudo establecer comunicacion con Cliente.
+ * 			1: Se estableció la coneccion entre cliente y servidor.
+ * 			2: No se pudo establecer el socket.
+ * 			3: No se pudo establecer comunicacion con servidor
+ * @note	Esta funcion se llama para reorientar o actualizar los modos en los modulos W5500.
+ * 			- Inicia socket, si devuelve el mismo valor de socket, se inicio exitoso
+ * 			- Necesita el modulo un tiempo
+ * 			- Si es cliente y se debe conectar a un servidor. Si se conecta devuelve SOCK_ESTABLISHED.
+ * 			- En caso de ser servidor debe incializar el socket y luego quedar en modo 'listen'
+ */
+
+uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP){
+	uint16_t server_port = 5001;
+	uint8_t statusSocket;
+	uint8_t statusConnect;
+
+	statusSocket = getSn_SR(socketNum);
+	while((statusSocket != SOCK_ESTABLISHED)){
+
+
+	if(socket(socketNum, Sn_MR_TCP, server_port, SF_TCP_NODELAY) == socketNum){
+
+		HAL_Delay(800);
+		if(*serverIP != 0){
+			uint8_t socketStatus;
+			uint8_t serverIp[4] = {192, 168, 2, 192};
+			socketStatus = getSn_SR(socketNum);
+			HAL_Delay(1000);
+
+			if((statusConnect = connect(socketNum,serverIp,server_port)) == SOCK_OK)
+				HAL_Delay(500);
+				return 1;
+		return 0;
+		}
+		else{
+			if(listen(socketNum) == SOCK_OK)
+				return 1;
+		}
+		return 3;
+	}
+
+	return 2;
+	}
+	return 1;
+}
+
 /*
  * @brief	Enviar datos
  * @oaram	socketNum: entero sin signo que identifica el socket del modulo.
@@ -184,60 +240,7 @@ int8_t recibe(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP)
 	return -1;
 }
 
-/*
- * @brief	Recargador de Inicio
- * @param	socketNum: entero sin signo que identifica el socket del modulo
- * 			serverIP: array de entero. La direccion IP del server en caso.
- * 					 el modulo w5500 tiene stack, que de hasta 16Kb de memoria maximo
- * 					 de asignación total entre la suma de los socket.
- * 					 SI ES CLIENTE, IGUALAR PREVIAMENTE A CERO "serverIP = 0" O EN EL MOMENTO
- * 					 DE HACER LA LLAMADA A LA FUNCION PASAR PARAMETRO 0
- * 		 	serverIP: array entero sin signo que se pasa por referencia en funcion connect().
- * @retval	0: No se pudo establecer comunicacion con Cliente.
- * 			1: Se estableció la coneccion entre cliente y servidor.
- * 			2: No se pudo establecer el socket.
- * 			3: No se pudo establecer comunicacion con servidor
- * @note	Esta funcion se llama para reorientar o actualizar los modos en los modulos W5500.
- * 			- Inicia socket, si devuelve el mismo valor de socket, se inicio exitoso
- * 			- Necesita el modulo un tiempo
- * 			- Si es cliente y se debe conectar a un servidor. Si se conecta devuelve SOCK_ESTABLISHED.
- * 			- En caso de ser servidor debe incializar el socket y luego quedar en modo 'listen'
- */
 
-uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP){
-	uint16_t server_port = 5001;
-	uint8_t statusSocket;
-	uint8_t statusConnect;
-
-	statusSocket = getSn_SR(socketNum);
-	while((statusSocket != SOCK_ESTABLISHED)){
-
-
-	if(socket(socketNum, Sn_MR_TCP, server_port, SF_TCP_NODELAY) == socketNum){
-
-		HAL_Delay(800);
-		if(*serverIP != 0){
-			uint8_t socketStatus;
-			uint8_t serverIp[4] = {192, 168, 2, 192};
-			socketStatus = getSn_SR(socketNum);
-			HAL_Delay(1000);
-
-			if((statusConnect = connect(socketNum,serverIp,server_port)) == SOCK_OK)
-				HAL_Delay(500);
-				return 1;
-		return 0;
-		}
-		else{
-			if(listen(socketNum) == SOCK_OK)
-				return 1;
-		}
-		return 3;
-	}
-
-	return 2;
-	}
-	return 1;
-}
 
 
 /*

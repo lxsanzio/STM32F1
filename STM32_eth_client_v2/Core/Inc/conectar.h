@@ -35,11 +35,12 @@ void initServer(uint8_t socketNum, uint8_t* bufSize);
 
 int8_t estadoSocket(uint8_t socketNum);
 
+uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP);
 
 int8_t envia(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP);
 int8_t recibe(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP);
 
-uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP);
+
 
 void desconectar(uint8_t socketNum);
 
