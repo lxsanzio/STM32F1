@@ -187,44 +187,86 @@ int main(void){
 
 	  	  while(estadoP == true){
 		  __NOP();
-		 if((stateRetarget = RetargetInit(socketNum,serverIP)) == 1){
-			 HAL_Delay(50);
-			  _stateJoyX = stateJoysticks(VR[0]);
-			  _stateJoyY = stateJoysticks(VR[1]);
-			  snd[0] = _stateJoyX;
-			  snd[1] = _stateJoyY;
-			  snd[2] = _sirena;
-			  sprintf(bufmsg,"%d,%d,%d",snd[0],snd[1],snd[2]);
-			  /*
-			  * @retval		-1: Bad File Number 'val = 9'
-			  * 			0: Se envio el paquete completo.
-			  * 			EIO: Hubo un error de I/O valor , errno = 5
-			  */
 
-			  //mostrar lo que se va a enviar.
-			  PRINT_STR(bufmsg);
-			  if((stateTx = envia(socketNum, bufmsg, (uint8_t)strlen(bufmsg), serverIP)) == 0){
-				  PRINT_OK();
-			  }
-			  else{
-				  PRINT_FAIL_TX(stateTx);					  //VISUALIZAR ERROR POR USART
-			  }
-			  if((stateSocket = estadoSocket(socketNum)) == 1){		//HAY DATOS EN EL STACK
-				  if((stateRx = recibe(socketNum, bufmsg, (uint8_t)strlen(bufmsg),serverIP)) == 0){
-					  translate(bufmsg,&recv);
-					  if(recv == 1) parpadea();
-				  }
-				  else{
-					  PRINT_FAIL_RX(stateRx);				//MOSTRAR POR USART EL PROBLEMA DADO POR stateRx
-				  }
-			  }
-			  else
-				  PRINT_FAIL_STATUS_SOCK(stateSocket);
-		 }
-		 else PRINT_FAIL_STATUS_SOCK(stateRetarget);
-		 HAL_Delay(80);
+		  switch(getSn_SR(socketNum)){
+		  	  case SOCK_INIT:
+		  		  HAL_Delay(500);
+		  		  connect(socketNum, serverIP,TCP_PORT);
+		  		  break;
+		  	  case SOCK_ESTABLISHED:
+		  		  HAL_Delay(500);
+		  	  	  _stateJoyX = stateJoysticks(VR[0]);
+				  _stateJoyY = stateJoysticks(VR[1]);
+				  snd[0] = _stateJoyX;
+				  snd[1] = _stateJoyY;
+				  snd[2] = _sirena;
+				  sprintf(bufmsg,"%d,%d,%d",snd[0],snd[1],snd[2]);
+				  /*
+				  * @retval		-1: Bad File Number 'val = 9'
+				  * 			0: Se envio el paquete completo.
+				  * 			EIO: Hubo un error de I/O valor , errno = 5
+				  */
+
+				  //mostrar lo que se va a enviar.
+				  PRINT_STR(bufmsg);
+				  send(socketNum,bufmsg,strlen(bufmsg));
+
+				  break;
+		  	  case SOCK_CLOSE_WAIT:
+		  		  HAL_Delay(500);
+		  		  close(socketNum);
+		  		  break;
+		  	  case SOCK_CLOSED:
+		  		  HAL_Delay(500);
+		  		  socket(socketNum,Sn_MR_TCP,TCP_PORT,SF_TCP_NODELAY);
+
+		  		  break;
+
+//
+//		 if((stateRetarget = RetargetInit(socketNum,serverIP)) == 1){
+//			 HAL_Delay(50);
+//			  _stateJoyX = stateJoysticks(VR[0]);
+//			  _stateJoyY = stateJoysticks(VR[1]);
+//			  snd[0] = _stateJoyX;
+//			  snd[1] = _stateJoyY;
+//			  snd[2] = _sirena;
+//			  sprintf(bufmsg,"%d,%d,%d",snd[0],snd[1],snd[2]);
+//			  /*
+//			  * @retval		-1: Bad File Number 'val = 9'
+//			  * 			0: Se envio el paquete completo.
+//			  * 			EIO: Hubo un error de I/O valor , errno = 5
+//			  */
+//
+//			  //mostrar lo que se va a enviar.
+//			  PRINT_STR(bufmsg);
+//			  if((stateTx = envia(socketNum, bufmsg, (uint8_t)strlen(bufmsg), serverIP)) == 0){
+//				  PRINT_OK();
+//			  }
+//			  else{
+//				  PRINT_FAIL_TX(stateTx);					  //VISUALIZAR ERROR POR USART
+//			  }
+//			  if((stateSocket = estadoSocket(socketNum)) == 1){		//HAY DATOS EN EL STACK
+//				  if((stateRx = recibe(socketNum, bufmsg, (uint8_t)strlen(bufmsg),serverIP)) == 0){
+//					  translate(bufmsg,&recv);
+//					  if(recv == 1) parpadea();
+//				  }
+//				  else{
+//					  PRINT_FAIL_RX(stateRx);				//MOSTRAR POR USART EL PROBLEMA DADO POR stateRx
+//				  }
+//			  }
+//			  else
+//				  PRINT_FAIL_STATUS_SOCK(stateSocket);
+//		 }
+//		 else PRINT_FAIL_STATUS_SOCK(stateRetarget);
+//		 HAL_Delay(80);
 
 		 recv = 0; //reinicia variable recibida. CReo innecesaria.
+
+
+
+
+
+		  }
 //		 count++;
 //
 //		 if(count > 200000){
@@ -505,7 +547,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			finJoystick(&hadc1);
 			estadoP = false;
 			apagaLED();
-			desconectar(socketNum);
+//			desconectar(socketNum);
 		}
 	}
 	//AL PRECIONAR EL BOTON DE SIRENA SE SETEA EN ACTIVO LA VARIABLE
