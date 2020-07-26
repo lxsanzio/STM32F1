@@ -78,7 +78,8 @@ extern UART_HandleTypeDef huart1;
 #define CONNECT_ERR_MSG		 "CONNECT Error!\r\n"
 #define STATUS_SOCKET_SERVER "STATUS SOCKET: %d\r\n"
 #define INIT_VALUE			 "["
-#define FIN_VALUE			 "]"
+#define FIN_VALUE			 "]\r"
+#define VALUE				 "[%d,%d,%d]\n"
 
 #define TCP_PORT 5001
 
@@ -86,6 +87,11 @@ extern UART_HandleTypeDef huart1;
 	HAL_UART_Transmit(&huart1, (uint8_t*)INIT_VALUE, strlen(INIT_VALUE), 100);	\
 	HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), 100);				\
 	HAL_UART_Transmit(&huart1, (uint8_t*)FIN_VALUE, strlen(FIN_VALUE), 100);	\
+} while(0)
+
+#define PRINT_VALUE(value) do  {										 		\
+	sprintf(msg,VALUE,value[0],value[1],value[2]);								\
+	HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), 100);				\
 } while(0)
 
 #define PRINT_HEADER() do  {													\

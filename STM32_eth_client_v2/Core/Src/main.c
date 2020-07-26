@@ -70,6 +70,7 @@ void apagaLED(void);
 
 void translate (char *msg, uint8_t *rcv);
 void parpadea (void);
+void sirenaLoca(void);
 
 /* USER CODE END PFP */
 
@@ -80,7 +81,7 @@ uint16_t VR[2];
 uint8_t socketNum = 0;
 
 static bool estadoP = false;
-uint8_t _sirena = 0;
+uint8_t _sirena;
 
 /* USER CODE END 0 */
 
@@ -149,6 +150,8 @@ int main(void)
   initClient(socketNum, bufSize);
 
   apagaLED();
+
+  _sirena = 0;
 
   /* USER CODE END 2 */
 
@@ -507,32 +510,48 @@ static void MX_GPIO_Init(void)
  * @param 	GPIO_Pin: Valor de PIN que llama a la interrupción
  */
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	if(GPIO_Pin == GPIO_PIN_12){			//A COMPLETAR CON FUNCION, RECORDAR FLAG QUE CONDICIONA PIN_13
-		if(estadoP == false){
+
+		switch(estadoP){
+		case false:
+			HAL_Delay(10);
 			initJoystick(&hadc1,VR);
 			estadoP = true;
 			prendeLED();
-
-		}
-		else{
+			break;
+		case true:
+			HAL_Delay(10);
 			finJoystick(&hadc1);
 			estadoP = false;
 			apagaLED();
-//			desconectar(socketNum);
+			break;
 		}
+//		if(estadoP == false){
+//			initJoystick(&hadc1,VR);
+//			estadoP = true;
+//			prendeLED();
+//
+//		}
+//		else{
+//			finJoystick(&hadc1);
+//			estadoP = false;
+//			apagaLED();
+//			desconectar(socketNum);
+//		}
 	}
 	//AL PRECIONAR EL BOTON DE SIRENA SE SETEA EN ACTIVO LA VARIABLE
 	if(GPIO_Pin == GPIO_PIN_15){
 		if(estadoP == true){
-		if(_sirena == 0) _sirena = 1;
-		if(_sirena == 1) _sirena = 0;
+			sirenaLoca();
+//		if(_sirena == 0) _sirena = 1;
+//		if(_sirena == 1) _sirena = 0;
 		}
 	}
-
-
 }
+
+
+
 
 
 
@@ -563,6 +582,17 @@ void parpadea (void){
 		prendeLED();
 		HAL_Delay(50);
 		i++;
+	}
+}
+
+void sirenaLoca(void){
+	switch(_sirena){
+	case 0:
+		_sirena = 1;
+		break;
+	case 1:
+		_sirena = 0;
+		break;
 	}
 }
 

@@ -143,9 +143,10 @@ int main(void)
 		  len = getSn_RX_RSR(socketNum);
 		  if(len >0){
 			  recv(socketNum,bufmsg,len);
-			  PRINT_STR(bufmsg);
+
 		  }
 		  translate(bufmsg,rcv);
+
 
 		 _stateJoyX = rcv[0];
 		 _stateJoyY = rcv[1];
@@ -153,7 +154,8 @@ int main(void)
 		 movServo(&htim2,_stateJoyX,1);
 		 movServo(&htim3,_stateJoyY,2);
 		 sirena(_stateSirena);
-
+		 PRINT_STR(bufmsg);
+		 PRINT_VALUE(rcv);
 //		 PRINT_OK2();
 
 		  break;
