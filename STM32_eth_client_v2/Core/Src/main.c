@@ -513,32 +513,32 @@ static void MX_GPIO_Init(void)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	if(GPIO_Pin == GPIO_PIN_12){			//A COMPLETAR CON FUNCION, RECORDAR FLAG QUE CONDICIONA PIN_13
 
-		switch(estadoP){
-		case false:
-			HAL_Delay(10);
-			initJoystick(&hadc1,VR);
-			estadoP = true;
-			prendeLED();
-			break;
-		case true:
-			HAL_Delay(10);
-			finJoystick(&hadc1);
-			estadoP = false;
-			apagaLED();
-			break;
-		}
-//		if(estadoP == false){
+//		switch(estadoP){
+//		case false:
+//			HAL_Delay(10);
 //			initJoystick(&hadc1,VR);
 //			estadoP = true;
 //			prendeLED();
-//
-//		}
-//		else{
+//			break;
+//		case true:
+//			HAL_Delay(10);
 //			finJoystick(&hadc1);
 //			estadoP = false;
 //			apagaLED();
-//			desconectar(socketNum);
+//			break;
 //		}
+		if(estadoP == false){
+			initJoystick(&hadc1,VR);
+			estadoP = true;
+			prendeLED();
+
+		}
+		else{
+			finJoystick(&hadc1);
+			estadoP = false;
+			apagaLED();
+			desconectar(socketNum);
+		}
 	}
 	//AL PRECIONAR EL BOTON DE SIRENA SE SETEA EN ACTIVO LA VARIABLE
 	if(GPIO_Pin == GPIO_PIN_15){
