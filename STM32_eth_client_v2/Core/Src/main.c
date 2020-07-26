@@ -48,7 +48,6 @@ SPI_HandleTypeDef hspi1;
 
 UART_HandleTypeDef huart1;
 
-
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -60,43 +59,18 @@ static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART1_UART_Init(void);
-
-/*
-// * PRUEBA
-// */
-//void cs_sel() {
-//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET); //CS LOW
-//}
-//
-//void cs_desel() {
-//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET); //CS HIGH
-//}
-//
-//uint8_t spi_rb(void) {
-//	uint8_t rbuf;
-//	HAL_SPI_Receive(&hspi1, &rbuf, 1, 0xFFFFFFFF);
-//	return rbuf;
-//}
-//
-//void spi_wb(uint8_t b) {
-//	HAL_SPI_Transmit(&hspi1, &b, 1, 0xFFFFFFFF);
-//}
-//
-/*
- * FIN DE PRUEBA
- */
-
+/* USER CODE BEGIN PFP */
 
 void SwitchLED (){
 	HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 }
 
-/* USER CODE BEGIN PFP */
 void prendeLED(void);
 void apagaLED(void);
 
 void translate (char *msg, uint8_t *rcv);
 void parpadea (void);
+void sirenaLoca(void);
 
 /* USER CODE END PFP */
 
@@ -107,7 +81,7 @@ uint16_t VR[2];
 uint8_t socketNum = 0;
 
 static bool estadoP = false;
-uint8_t _sirena = 0;
+uint8_t _sirena;
 
 /* USER CODE END 0 */
 
@@ -115,8 +89,8 @@ uint8_t _sirena = 0;
   * @brief  The application entry point.
   * @retval int
   */
-int main(void){
-  /* USER CODE BEGIN 1 */
+int main(void)
+{/* USER CODE BEGIN 1 */
 	/*
 	 * VARIABLES PARA DEFINICION DE CONEXION TCP
 	 */
@@ -177,6 +151,8 @@ int main(void){
 
   apagaLED();
 
+  _sirena = 0;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -187,44 +163,86 @@ int main(void){
 
 	  	  while(estadoP == true){
 		  __NOP();
-		 if((stateRetarget = RetargetInit(socketNum,serverIP)) == 1){
-			 HAL_Delay(50);
-			  _stateJoyX = stateJoysticks(VR[0]);
-			  _stateJoyY = stateJoysticks(VR[1]);
-			  snd[0] = _stateJoyX;
-			  snd[1] = _stateJoyY;
-			  snd[2] = _sirena;
-			  sprintf(bufmsg,"%d,%d,%d",snd[0],snd[1],snd[2]);
-			  /*
-			  * @retval		-1: Bad File Number 'val = 9'
-			  * 			0: Se envio el paquete completo.
-			  * 			EIO: Hubo un error de I/O valor , errno = 5
-			  */
 
-			  //mostrar lo que se va a enviar.
-			  PRINT_STR(bufmsg);
-			  if((stateTx = envia(socketNum, bufmsg, (uint8_t)strlen(bufmsg), serverIP)) == 0){
-				  PRINT_OK();
-			  }
-			  else{
-				  PRINT_FAIL_TX(stateTx);					  //VISUALIZAR ERROR POR USART
-			  }
-			  if((stateSocket = estadoSocket(socketNum)) == 1){		//HAY DATOS EN EL STACK
-				  if((stateRx = recibe(socketNum, bufmsg, (uint8_t)strlen(bufmsg),serverIP)) == 0){
-					  translate(bufmsg,&recv);
-					  if(recv == 1) parpadea();
-				  }
-				  else{
-					  PRINT_FAIL_RX(stateRx);				//MOSTRAR POR USART EL PROBLEMA DADO POR stateRx
-				  }
-			  }
-			  else
-				  PRINT_FAIL_STATUS_SOCK(stateSocket);
-		 }
-		 else PRINT_FAIL_STATUS_SOCK(stateRetarget);
-		 HAL_Delay(80);
+		  switch(getSn_SR(socketNum)){
+		  	  case SOCK_INIT:
+		  		  HAL_Delay(500);
+		  		  connect(socketNum, serverIP,TCP_PORT);
+		  		  break;
+		  	  case SOCK_ESTABLISHED:
+		  		  HAL_Delay(500);
+		  	  	  _stateJoyX = stateJoysticks(VR[0]);
+				  _stateJoyY = stateJoysticks(VR[1]);
+				  snd[0] = _stateJoyX;
+				  snd[1] = _stateJoyY;
+				  snd[2] = _sirena;
+				  sprintf(bufmsg,"%d,%d,%d",snd[0],snd[1],snd[2]);
+				  /*
+				  * @retval		-1: Bad File Number 'val = 9'
+				  * 			0: Se envio el paquete completo.
+				  * 			EIO: Hubo un error de I/O valor , errno = 5
+				  */
+
+				  //mostrar lo que se va a enviar.
+				  PRINT_STR(bufmsg);
+				  send(socketNum,(uint8_t*)bufmsg,strlen(bufmsg));
+
+				  break;
+		  	  case SOCK_CLOSE_WAIT:
+		  		  HAL_Delay(500);
+		  		  close(socketNum);
+		  		  break;
+		  	  case SOCK_CLOSED:
+		  		  HAL_Delay(500);
+		  		  socket(socketNum,Sn_MR_TCP,TCP_PORT,SF_TCP_NODELAY);
+
+		  		  break;
+
+//
+//		 if((stateRetarget = RetargetInit(socketNum,serverIP)) == 1){
+//			 HAL_Delay(50);
+//			  _stateJoyX = stateJoysticks(VR[0]);
+//			  _stateJoyY = stateJoysticks(VR[1]);
+//			  snd[0] = _stateJoyX;
+//			  snd[1] = _stateJoyY;
+//			  snd[2] = _sirena;
+//			  sprintf(bufmsg,"%d,%d,%d",snd[0],snd[1],snd[2]);
+//			  /*
+//			  * @retval		-1: Bad File Number 'val = 9'
+//			  * 			0: Se envio el paquete completo.
+//			  * 			EIO: Hubo un error de I/O valor , errno = 5
+//			  */
+//
+//			  //mostrar lo que se va a enviar.
+//			  PRINT_STR(bufmsg);
+//			  if((stateTx = envia(socketNum, bufmsg, (uint8_t)strlen(bufmsg), serverIP)) == 0){
+//				  PRINT_OK();
+//			  }
+//			  else{
+//				  PRINT_FAIL_TX(stateTx);					  //VISUALIZAR ERROR POR USART
+//			  }
+//			  if((stateSocket = estadoSocket(socketNum)) == 1){		//HAY DATOS EN EL STACK
+//				  if((stateRx = recibe(socketNum, bufmsg, (uint8_t)strlen(bufmsg),serverIP)) == 0){
+//					  translate(bufmsg,&recv);
+//					  if(recv == 1) parpadea();
+//				  }
+//				  else{
+//					  PRINT_FAIL_RX(stateRx);				//MOSTRAR POR USART EL PROBLEMA DADO POR stateRx
+//				  }
+//			  }
+//			  else
+//				  PRINT_FAIL_STATUS_SOCK(stateSocket);
+//		 }
+//		 else PRINT_FAIL_STATUS_SOCK(stateRetarget);
+//		 HAL_Delay(80);
 
 		 recv = 0; //reinicia variable recibida. CReo innecesaria.
+
+
+
+
+
+		  }
 //		 count++;
 //
 //		 if(count > 200000){
@@ -465,8 +483,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB12 PB13 */
-  GPIO_InitStruct.Pin = GPIO_PIN_12|GPIO_PIN_13;
+  /*Configure GPIO pins : PB12 PB15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_12|GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -492,9 +510,23 @@ static void MX_GPIO_Init(void)
  * @param 	GPIO_Pin: Valor de PIN que llama a la interrupción
  */
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	if(GPIO_Pin == GPIO_PIN_12){			//A COMPLETAR CON FUNCION, RECORDAR FLAG QUE CONDICIONA PIN_13
+
+//		switch(estadoP){
+//		case false:
+//			HAL_Delay(10);
+//			initJoystick(&hadc1,VR);
+//			estadoP = true;
+//			prendeLED();
+//			break;
+//		case true:
+//			HAL_Delay(10);
+//			finJoystick(&hadc1);
+//			estadoP = false;
+//			apagaLED();
+//			break;
+//		}
 		if(estadoP == false){
 			initJoystick(&hadc1,VR);
 			estadoP = true;
@@ -509,13 +541,18 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		}
 	}
 	//AL PRECIONAR EL BOTON DE SIRENA SE SETEA EN ACTIVO LA VARIABLE
-	if((GPIO_Pin == GPIO_PIN_13) && (estadoP ==true)){
-		if(_sirena == 0) _sirena = 1;
-		if(_sirena == 1) _sirena = 0;
+	if(GPIO_Pin == GPIO_PIN_15){
+		if(estadoP == true){
+			sirenaLoca();
+//		if(_sirena == 0) _sirena = 1;
+//		if(_sirena == 1) _sirena = 0;
+		}
 	}
-
-
 }
+
+
+
+
 
 
 void prendeLED(void){
@@ -545,6 +582,17 @@ void parpadea (void){
 		prendeLED();
 		HAL_Delay(50);
 		i++;
+	}
+}
+
+void sirenaLoca(void){
+	switch(_sirena){
+	case 0:
+		_sirena = 1;
+		break;
+	case 1:
+		_sirena = 0;
+		break;
 	}
 }
 

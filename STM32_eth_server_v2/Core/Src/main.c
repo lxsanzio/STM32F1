@@ -130,44 +130,80 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)  {
+  while (1) {
     /* USER CODE END WHILE */
+	 __NOP();
+	  switch(getSn_SR(socketNum)){
+	  case SOCK_INIT:
+		  HAL_Delay(500);
+		  listen(socketNum);
+		  break;
+	  case SOCK_ESTABLISHED:
+		  HAL_Delay(500);
+		  len = getSn_RX_RSR(socketNum);
+		  if(len >0){
+			  recv(socketNum,bufmsg,len);
 
-	  if((stateRetarget = RetargetInit(socketNum,&serverIP)) == 1){
-//		  if((stateRx = estadoSocket(socketNum)) == 1){
-		  HAL_Delay(20);
-			if((len = getSn_RX_RSR(socketNum)) > 0) {
-
-
-
-
-			  if((stateRx = recibe(socketNum, bufmsg, (uint8_t)strlen(bufmsg),&serverIP)) == 0){
-
-				  translate(bufmsg,rcv);
-
-			  		_stateJoyX = rcv[0];
-			  		_stateJoyY = rcv[1];
-			  		_stateSirena = rcv[2];
-
-			  		movServo(&htim2,_stateJoyX,1);
-			  		movServo(&htim3,_stateJoyY,2);
-			  		sirena(_stateSirena);
-			  		PRINT_OK2();
-			  		PRINT_STR(bufmsg);
-
-			   }
-			  else
-				  PRINT_FAIL_RX(stateRx);				//MOSTRAR POR USART EL PROBLEMA DADO POR stateRx
-			  }
-		  statusSocket = getSn_SR(socketNum);
-		  if(statusSocket == SOCK_LISTEN){		//CUENTA HASTA 100 Y MUESTRA STATUS SOCKET 1
-			  count++;
-			  if(count == 100){
-				  PRINT_STATUS_SOCK_SERVER(stateRetarget);
-			  }
 		  }
+		  translate(bufmsg,rcv);
 
-		  HAL_Delay(80);
+
+		 _stateJoyX = rcv[0];
+		 _stateJoyY = rcv[1];
+		 _stateSirena = rcv[2];
+		 movServo(&htim2,_stateJoyX,1);
+		 movServo(&htim3,_stateJoyY,2);
+		 sirena(_stateSirena);
+		 PRINT_STR(bufmsg);
+		 PRINT_VALUE(rcv);
+//		 PRINT_OK2();
+
+		  break;
+	  case SOCK_CLOSE_WAIT:
+		  HAL_Delay(500);
+		  close(socketNum);
+		  break;
+	  case SOCK_CLOSED:
+		  HAL_Delay(500);
+		  socket(socketNum,Sn_MR_TCP,TCP_PORT,SF_TCP_NODELAY);
+
+		  break;
+//
+//	  if((stateRetarget = RetargetInit(socketNum,&serverIP)) == 1){
+////		  if((stateRx = estadoSocket(socketNum)) == 1){
+//		  HAL_Delay(20);
+//			if((len = getSn_RX_RSR(socketNum)) > 0) {
+//
+//
+//
+//
+//			  if((stateRx = recibe(socketNum, bufmsg, (uint8_t)strlen(bufmsg),&serverIP)) == 0){
+//
+//				  translate(bufmsg,rcv);
+//
+//			  		_stateJoyX = rcv[0];
+//			  		_stateJoyY = rcv[1];
+//			  		_stateSirena = rcv[2];
+//
+//			  		movServo(&htim2,_stateJoyX,1);
+//			  		movServo(&htim3,_stateJoyY,2);
+//			  		sirena(_stateSirena);
+//			  		PRINT_OK2();
+//			  		PRINT_STR(bufmsg);
+//
+//			   }
+//			  else
+//				  PRINT_FAIL_RX(stateRx);				//MOSTRAR POR USART EL PROBLEMA DADO POR stateRx
+//			  }
+//		  statusSocket = getSn_SR(socketNum);
+//		  if(statusSocket == SOCK_LISTEN){		//CUENTA HASTA 100 Y MUESTRA STATUS SOCKET 1
+//			  count++;
+//			  if(count == 100){
+//				  PRINT_STATUS_SOCK_SERVER(stateRetarget);
+//			  }
+//		  }
+//
+//		  HAL_Delay(80);
 	 /*
 	  * VERIFICAR ESTA PARTE, DADO QUE SI NO PUEDE INGRESAR AL 1ER CONDICIONAL NO VALE LA PENA QUE CUENTE
 	  * BUSCANDO CERRAR EL SOCKET
