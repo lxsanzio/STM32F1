@@ -61,6 +61,8 @@ static void MX_TIM3_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
+void prendeLED(void);
+void apagaLED(void);
 
 void translate(char* msg, int8_t* rcv);
 void sirena (uint8_t _sirena);
@@ -86,7 +88,9 @@ int main(void)
 	uint8_t bufSize[] = {16, 0, 0, 0, 0, 0, 0, 0};
 //	uint8_t serverIP = 0;
 
-	uint16_t count = 0;
+	uint16_t count;
+	uint16_t count2;
+
 	int8_t _stateJoyX;
 	int8_t _stateJoyY;
 	uint8_t _stateSirena;
@@ -94,10 +98,10 @@ int main(void)
 //	uint8_t snd[1];
 	char bufmsg[60];
 //	int8_t stateTx;
-	int8_t stateRx;
-	uint8_t stateRetarget;
-	uint8_t statusSocket;
-	uint16_t len;
+//	int8_t stateRx;
+//	uint8_t stateRetarget;
+//	uint8_t statusSocket;
+	uint16_t len = 0;
 
 	bool estadoPi = false;
   /* USER CODE END 1 */
@@ -132,6 +136,8 @@ int main(void)
 //  initServo(&htim2,&htim3);
 
   estadoP = sCLOSE;
+  count = 0;
+  count2 = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -140,126 +146,89 @@ int main(void)
     /* USER CODE END WHILE */
 	  switch(estadoP){
 
-	  case sINIT:
-		  if(estadoPi == false){
-			 initServo(&htim2,&htim3);
-			 estadpPi = true;
-			 estadoP = sWORK;
-			 parpadea();
+		  case sINIT:
+			  __NOP();
+			  if(estadoPi == false){
+				  initServo(&htim2,&htim3);
+				  estadoPi = true;
+				  estadoP = sWORK;
+				  parpadea();
+
+			  }
+			  else estadoP += 1;
+			  count = 0;
+			  break;
+
+		  case sFINISH:
+			  __NOP();
+			  finishServo(&htim2,&htim3);
+			  apagaLED();
+			  estadoPi = false;
+			  estadoP = sCLOSE;
+			  count2 = 0;
+			  count = 0;
+			  break;
+
+			  //EMPIEZA 2DO SWITCH FUNCIONAMIENTO MODULO
+		  case sWORK:
+			  __NOP();
+			  //0: Desconectado
+			  //1: Conectado
+			  if(estadoWire() == 1) estadoP = sERROR;
+			  else			//Sacamos corchetes del else, para ver si absorbe toda la funcion.
+				  switch(getSn_SR(socketNum)){
+			  	  case SOCK_INIT:
+					  HAL_Delay(50);
+					  listen(socketNum);
+					  break;
+			  	  case SOCK_ESTABLISHED:
+			  		  HAL_Delay(50);
+			  		  len = getSn_RX_RSR(socketNum);
+					  if(len > 0) {
+						  recv(socketNum,(uint8_t*) bufmsg, len);		//problema con esta funcion se me despelotan los contadores
+						  translate(bufmsg,rcv);
+						  _stateJoyX = rcv[0];
+						  _stateJoyY = rcv[1];
+						  _stateSirena = rcv[2];
+						  movServo(&htim2, _stateJoyX, 1);
+						  movServo(&htim3, _stateJoyY, 2);
+						  sirena(_stateSirena);
+			//			  PRINT_STR(bufmsg);
+						  PRINT_VALUE(rcv);
+					  }
+					  break;
+				  case SOCK_CLOSE_WAIT:
+					  HAL_Delay(50);
+					  close(socketNum);
+					  break;
+				  case SOCK_CLOSED:
+					  HAL_Delay(50);
+					  socket(socketNum,Sn_MR_TCP,TCP_PORT,SF_TCP_NODELAY);
+					  break;
+			  	  }
+
+			  break;
+
+		  case sERROR:
+			  __NOP();
+			  parpadea();
+			  if(estadoWire() == 0) estadoP = sWORK;
+			  count2++;
+			  if(count2 > 5) estadoP = sFINISH;
+			  break;
+
+		  case sCLOSE:
+			  __NOP();
+			  count++;
+			  if(count > 5) estadoP = sINIT;
+			  break;
 		  }
-		  else estadoP += 1;
-		  break;
 
-	  case sFINISH:
-		  finishServo(&htim2,&htim3);
-		  apagaLED();
-		  estadoPi = false;
-		  estadoP = sCLOSE;
-		  break;
-
-	  //EMPIEZA 2DO SWITCH FUNCIONAMIENTO MODULO
-	  case sWORK:
-	  	  __NOP();
-		  if(esadoWire() == 1) estadoP = sERROR;
-		  switch(getSn_SR(socketNum)){
-			  case SOCK_INIT:
-				  HAL_Delay(50);
-				  listen(socketNum);
-				  break;
-			  case SOCK_ESTABLISHED:
-				  HAL_Delay(50);
-				  len = getSn_RX_RSR(socketNum);
-				  if(len >0){
-					  recv(socketNum,bufmsg,len);
-				  }
-				  translate(bufmsg,rcv);
-				  _stateJoyX = rcv[0];
-				  _stateJoyY = rcv[1];
-				  _stateSirena = rcv[2];
-				  movServo(&htim2,_stateJoyX,1);
-				  movServo(&htim3,_stateJoyY,2);
-				  sirena(_stateSirena);
-				  PRINT_STR(bufmsg);
-				  PRINT_VALUE(rcv);
-				  break;
-			  case SOCK_CLOSE_WAIT:
-				  HAL_Delay(50);
-				  close(socketNum);
-				  break;
-			  case SOCK_CLOSED:
-				  HAL_Delay(50);
-				  socket(socketNum,Sn_MR_TCP,TCP_PORT,SF_TCP_NODELAY);
-
-				  break;
-		  }
-		  break;
-
-	  case sERROR:
-		  parpadea();
-		  if(estadoWire() == 0) estadoP = sWORK;
-		  break;
-
-	  case sCLOSE:
-		  __NOP();
-		  break;
-	  }
-//
-//	  if((stateRetarget = RetargetInit(socketNum,&serverIP)) == 1){
-////		  if((stateRx = estadoSocket(socketNum)) == 1){
-//		  HAL_Delay(20);
-//			if((len = getSn_RX_RSR(socketNum)) > 0) {
-//
-//
-//
-//
-//			  if((stateRx = recibe(socketNum, bufmsg, (uint8_t)strlen(bufmsg),&serverIP)) == 0){
-//
-//				  translate(bufmsg,rcv);
-//
-//			  		_stateJoyX = rcv[0];
-//			  		_stateJoyY = rcv[1];
-//			  		_stateSirena = rcv[2];
-//
-//			  		movServo(&htim2,_stateJoyX,1);
-//			  		movServo(&htim3,_stateJoyY,2);
-//			  		sirena(_stateSirena);
-//			  		PRINT_OK2();
-//			  		PRINT_STR(bufmsg);
-//
-//			   }
-//			  else
-//				  PRINT_FAIL_RX(stateRx);				//MOSTRAR POR USART EL PROBLEMA DADO POR stateRx
-//			  }
-//		  statusSocket = getSn_SR(socketNum);
-//		  if(statusSocket == SOCK_LISTEN){		//CUENTA HASTA 100 Y MUESTRA STATUS SOCKET 1
-//			  count++;
-//			  if(count == 100){
-//				  PRINT_STATUS_SOCK_SERVER(stateRetarget);
-//			  }
-//		  }
-//
-//		  HAL_Delay(80);
-	 /*
-	  * VERIFICAR ESTA PARTE, DADO QUE SI NO PUEDE INGRESAR AL 1ER CONDICIONAL NO VALE LA PENA QUE CUENTE
-	  * BUSCANDO CERRAR EL SOCKET
-//	  */
-//	  count++;
-//
-//	 if (count < 50000){
-//		 RetargetInit(socketNum, &serverIP);
-//		 count = 0;
-//	 }
-//	 if(count < 20000){
-//		  //CONDICIONAL: EVITA QUE ESTÉ SIEMPRE CONECTADO CON EL SERVIDOR
-//		  desconectar(socketNum);
-//		  HAL_Delay(500);
-//	 }
-
-
-	  }
+    /* USER CODE BEGIN 3 */
+  }
   /* USER CODE END 3 */
 }
-}
+
 /**
   * @brief System Clock Configuration
   * @retval None
@@ -287,8 +256,8 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV2;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
@@ -505,6 +474,15 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+
+void prendeLED(void){
+	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+}
+
+void apagaLED(void){
+	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+}
+
 void translate(char* msg, int8_t* rcv){
 	static uint8_t i, j;
 	j = 0;
@@ -541,9 +519,9 @@ void sirena (uint8_t _sirena){
 void parpadea (void){
 	uint8_t i =0;
 	while(i < 5){
-		apagaLED();
-		HAL_Delay(50);
 		prendeLED();
+		HAL_Delay(50);
+		apagaLED();
 		HAL_Delay(50);
 		i++;
 	}

@@ -29,10 +29,6 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -40,6 +36,16 @@ extern "C" {
 #include "w5500.h"
 #include "socket.h"
 
+/*  COMPILAR Y LUEDO DESCOMENTAR
+ *
+ *
+ */
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <string.h>
+
+#include <stdbool.h>
 
 #include "conectar.h"
 #include "servo.h"
