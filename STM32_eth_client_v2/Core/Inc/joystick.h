@@ -19,7 +19,7 @@
 void initJoystick(ADC_HandleTypeDef *, uint16_t []);
 void finJoystick(ADC_HandleTypeDef *);
 //void stateJoystick(uint16_t R[]);
-int8_t stateJoysticks(uint16_t R);
+uint8_t stateJoysticks(uint16_t R);
 void stateButton(uint8_t);				//INTENSION DE CONTROLAR LUZ DEL PIN_C13
 
 

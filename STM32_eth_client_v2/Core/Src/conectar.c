@@ -52,7 +52,7 @@ void initClient(uint8_t socketNum, uint8_t* bufSize){
 	reg_wizchip_cs_cbfunc(cs_sel, cs_desel);
 	reg_wizchip_spi_cbfunc(spi_rb, spi_wb);
 	wizchip_init(bufSize, bufSize);
-	wiz_NetInfo netInfo = { .mac		= {0x00, 0x08, 0xdc, 0xab, 0xef}, //Mac Addres
+	wiz_NetInfo netInfo = { .mac		= {0x00, 0x11, 0x08, 0xdc, 0xab, 0xef}, //Mac Addres
 							.ip 		= {192, 168, 2, 191},
 							.sn			= {255, 255, 255, 0},
 							.gw			= {192, 168, 2, 1} };
@@ -63,6 +63,7 @@ void initClient(uint8_t socketNum, uint8_t* bufSize){
 
 	wizchip_setnetinfo(&netInfo);
 	wizchip_getnetinfo(&netInfo);
+	HAL_Delay(300);
 	PRINT_NETINFO(netInfo);				//VISUALIZA POR USART LOS PARAMETROS DE RED
 }
 /*
@@ -83,7 +84,7 @@ void initServer(uint8_t socketNum, uint8_t* bufSize){
 	reg_wizchip_cs_cbfunc(cs_sel, cs_desel);
 	reg_wizchip_spi_cbfunc(spi_rb, spi_wb);
 	wizchip_init(bufSize, bufSize);
-	wiz_NetInfo netInfo = { .mac		= {0x00, 0x08, 0xdc, 0xab, 0xff}, //Mac Addres
+	wiz_NetInfo netInfo = { .mac		= {0x00, 0x11, 0x08, 0xdc, 0xab, 0xff}, //Mac Addres Cliente
 							.ip 		= {192, 168, 2, 192},
 							.sn			= {255, 255, 255, 0},
 							.gw			= {192, 168, 2, 1} };
@@ -94,6 +95,7 @@ void initServer(uint8_t socketNum, uint8_t* bufSize){
 
 	wizchip_setnetinfo(&netInfo);
 	wizchip_getnetinfo(&netInfo);
+	HAL_Delay(300);
 	PRINT_NETINFO(netInfo);				//VISUALIZA POR USART LOS PARAMETROS DE RED
 }
 
@@ -104,11 +106,86 @@ void initServer(uint8_t socketNum, uint8_t* bufSize){
  * 	@retval	0: No hay datos que recibir
  * 			1: Hay datos el stack RX
  */
-uint8_t estadoSocket(uint8_t socketNum){
+int8_t estadoSocket(uint8_t socketNum){  //cambiar a entero con signo
 	uint16_t len;
 	len = getSn_RX_RSR(socketNum);
 	if (len > 0) 	return 1;
 	else 	return 0;
+}
+
+
+/*	@brief	Estado del cable
+ * 	@note	Función que determina la conexion del cable eth, en caso de que esté conectado
+ * 			enviará datos, de lo contrario pasa a estado close.
+ * 	@retval 	0: El cable se encuentra conectado y debe enviar y recibir datos.
+ * 				1: El cable eth se desconectó
+ */
+
+
+uint8_t estadoWire(void){
+	uint8_t phyLink = 0;
+	ctlwizchip(CW_GET_PHYLINK, (void*) &phyLink);
+	HAL_Delay(10);
+	if(phyLink == PHY_LINK_OFF){
+		return 1;
+	}
+	return 0;
+}
+
+
+/*
+ * @brief	Recargador de Inicio
+ * @param	socketNum: entero sin signo que identifica el socket del modulo
+ * 			serverIP: array de entero. La direccion IP del server en caso.
+ * 					 el modulo w5500 tiene stack, que de hasta 16Kb de memoria maximo
+ * 					 de asignación total entre la suma de los socket.
+ * 					 SI ES CLIENTE, IGUALAR PREVIAMENTE A CERO "serverIP = 0" O EN EL MOMENTO
+ * 					 DE HACER LA LLAMADA A LA FUNCION PASAR PARAMETRO 0
+ * 		 	serverIP: array entero sin signo que se pasa por referencia en funcion connect().
+ * @retval	0: No se pudo establecer comunicacion con Cliente.
+ * 			1: Se estableció la coneccion entre cliente y servidor.
+ * 			2: No se pudo establecer el socket.
+ * 			3: No se pudo establecer comunicacion con servidor
+ * @note	Esta funcion se llama para reorientar o actualizar los modos en los modulos W5500.
+ * 			- Inicia socket, si devuelve el mismo valor de socket, se inicio exitoso
+ * 			- Necesita el modulo un tiempo
+ * 			- Si es cliente y se debe conectar a un servidor. Si se conecta devuelve SOCK_ESTABLISHED.
+ * 			- En caso de ser servidor debe incializar el socket y luego quedar en modo 'listen'
+ */
+
+uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP){
+	uint16_t server_port = 5001;
+	uint8_t statusSocket;
+	uint8_t statusConnect;
+
+	statusSocket = getSn_SR(socketNum);
+	while((statusSocket != SOCK_ESTABLISHED)){
+
+
+	if(socket(socketNum, Sn_MR_TCP, server_port, SF_TCP_NODELAY) == socketNum){
+
+		HAL_Delay(800);
+		if(*serverIP != 0){
+			uint8_t socketStatus;
+			uint8_t serverIp[4] = {192, 168, 2, 192};
+			socketStatus = getSn_SR(socketNum);
+			HAL_Delay(1000);
+
+			if((statusConnect = connect(socketNum,serverIp,server_port)) == SOCK_OK)
+				HAL_Delay(500);
+				return 1;
+		return 0;
+		}
+		else{
+			if(listen(socketNum) == SOCK_OK)
+				return 1;
+		}
+		return 3;
+	}
+
+	return 2;
+	}
+	return 1;
 }
 
 /*
@@ -175,51 +252,14 @@ int8_t recibe(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP)
 	}
 	else{
 		close(socketNum);
+		HAL_Delay(100);
 		RetargetInit(socketNum, serverIP);
 	}
 	errno = EBADF;
 	return -1;
 }
 
-/*
- * @brief	Recargador de Inicio
- * @param	socketNum: entero sin signo que identifica el socket del modulo
- * 			serverIP: array de entero. La direccion IP del server en caso.
- * 					 el modulo w5500 tiene stack, que de hasta 16Kb de memoria maximo
- * 					 de asignación total entre la suma de los socket.
- * 					 SI ES CLIENTE, IGUALAR PREVIAMENTE A CERO "serverIP = 0" O EN EL MOMENTO
- * 					 DE HACER LA LLAMADA A LA FUNCION PASAR PARAMETRO 0
- * 		 	serverIP: array entero sin signo que se pasa por referencia en funcion connect().
- * @retval	0: No se pudo establecer comunicacion con Cliente.
- * 			1: Se estableció la coneccion entre cliente y servidor.
- * 			2: No se pudo establecer el socket.
- * 			3: No se pudo establecer comunicacion con servidor
- * @note	Esta funcion se llama para reorientar o actualizar los modos en los modulos W5500.
- * 			- Inicia socket, si devuelve el mismo valor de socket, se inicio exitoso
- * 			- Necesita el modulo un tiempo
- * 			- Si es cliente y se debe conectar a un servidor. Si se conecta devuelve SOCK_ESTABLISHED.
- * 			- En caso de ser servidor debe incializar el socket y luego quedar en modo 'listen'
- */
 
-uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP){
-	while((getSn_SR(socketNum) != SOCK_LISTEN) || (getSn_SR(socketNum) != SOCK_ESTABLISHED)){
-	if(socket(socketNum, Sn_MR_TCP, TCP_PORT, SF_TCP_NODELAY) == socketNum){
-		HAL_Delay(800);
-		if(serverIP != 0){
-			if(connect(socketNum,serverIP,TCP_PORT) == SOCK_OK)
-				return 1 ;
-			return 0;
-		}
-		else{
-			if(listen(socketNum) == SOCK_OK)
-				return 1;
-		}
-		return 3;
-	}
-	return 2;
-	}
-	return 1;
-}
 
 
 /*

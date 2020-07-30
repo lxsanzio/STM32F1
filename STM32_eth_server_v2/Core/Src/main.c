@@ -61,15 +61,19 @@ static void MX_TIM3_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
+void prendeLED(void);
+void apagaLED(void);
 
 void translate(char* msg, int8_t* rcv);
 void sirena (uint8_t _sirena);
+void parpadea (void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
 uint8_t socketNum = 0;
+enum _estadoPa {sINIT, sFINISH, sWORK, sERROR, sCLOSE} estadoP;
 
 /* USER CODE END 0 */
 
@@ -82,19 +86,24 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
 	uint8_t bufSize[] = {16, 0, 0, 0, 0, 0, 0, 0};
-	uint8_t serverIP = 0;
+//	uint8_t serverIP = 0;
 
-//	uint16_t count = 0;
+	uint16_t count;
+	uint16_t count2;
+
 	int8_t _stateJoyX;
 	int8_t _stateJoyY;
 	uint8_t _stateSirena;
-	int8_t rcv[5];
+	int8_t rcv[3];
 //	uint8_t snd[1];
 	char bufmsg[60];
 //	int8_t stateTx;
-	int8_t stateRx;
-	int8_t stateRetarget;
+//	int8_t stateRx;
+//	uint8_t stateRetarget;
+//	uint8_t statusSocket;
+	uint16_t len = 0;
 
+	bool estadoPi = false;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -124,54 +133,98 @@ int main(void)
   PRINT_HEADER();
 
   initServer(socketNum, bufSize);
+//  initServo(&htim2,&htim3);
 
+  estadoP = sCLOSE;
+  count = 0;
+  count2 = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)  {
+  while (1) {
     /* USER CODE END WHILE */
+	  switch(estadoP){
 
-	  if((stateRetarget = RetargetInit(socketNum,&serverIP)) == 1){
-		  if((stateRx = estadoSocket(socketNum)) == 1){
-			  initServo(&htim2,&htim3);
-			  if((stateRx = recibe(socketNum, bufmsg, (uint8_t)strlen(bufmsg),&serverIP)) == 0){
-			  		translate(bufmsg,rcv);
+		  case sINIT:
+			  __NOP();
+			  if(estadoPi == false){
+				  initServo(&htim2,&htim3);
+				  estadoPi = true;
+				  estadoP = sWORK;
+				  parpadea();
 
-			  		_stateJoyX = rcv[0];
-			  		_stateJoyY = rcv[1];
-			  		_stateSirena = rcv[2];
-
-			  		movServo(&htim2,_stateJoyX,1);
-			  		movServo(&htim3,_stateJoyY,2);
-			  		sirena(_stateSirena);
-
-			   }
-			  else
-				  PRINT_FAIL_RX(stateRx);				//MOSTRAR POR USART EL PROBLEMA DADO POR stateRx
 			  }
-	  }
-	  else PRINT_FAIL_STATUS_SOCK(stateRetarget);
+			  else estadoP += 1;
+			  count = 0;
+			  break;
+
+		  case sFINISH:
+			  __NOP();
+			  finishServo(&htim2,&htim3);
+			  apagaLED();
+			  estadoPi = false;
+			  estadoP = sCLOSE;
+			  count2 = 0;
+			  count = 0;
+			  break;
+
+			  //EMPIEZA 2DO SWITCH FUNCIONAMIENTO MODULO
+		  case sWORK:
+			  __NOP();
+			  //0: Desconectado
+			  //1: Conectado
+			  if(estadoWire() == 1) estadoP = sERROR;
+			  else			//Sacamos corchetes del else, para ver si absorbe toda la funcion.
+				  switch(getSn_SR(socketNum)){
+			  	  case SOCK_INIT:
+					  HAL_Delay(50);
+					  listen(socketNum);
+					  break;
+			  	  case SOCK_ESTABLISHED:
+			  		  HAL_Delay(50);
+			  		  len = getSn_RX_RSR(socketNum);
+					  if(len > 0) {
+						  recv(socketNum,(uint8_t*) bufmsg, len);		//problema con esta funcion se me despelotan los contadores
+						  translate(bufmsg,rcv);
+						  _stateJoyX = rcv[0];
+						  _stateJoyY = rcv[1];
+						  _stateSirena = rcv[2];
+						  movServo(&htim2, _stateJoyX, 1);
+						  movServo(&htim3, _stateJoyY, 2);
+						  sirena(_stateSirena);
+			//			  PRINT_STR(bufmsg);
+						  PRINT_VALUE(rcv);
+					  }
+					  break;
+				  case SOCK_CLOSE_WAIT:
+					  HAL_Delay(50);
+					  close(socketNum);
+					  break;
+				  case SOCK_CLOSED:
+					  HAL_Delay(50);
+					  socket(socketNum,Sn_MR_TCP,TCP_PORT,SF_TCP_NODELAY);
+					  break;
+			  	  }
+
+			  break;
+
+		  case sERROR:
+			  __NOP();
+			  parpadea();
+			  if(estadoWire() == 0) estadoP = sWORK;
+			  count2++;
+			  if(count2 > 5) estadoP = sFINISH;
+			  break;
+
+		  case sCLOSE:
+			  __NOP();
+			  count++;
+			  if(count > 5) estadoP = sINIT;
+			  break;
+		  }
 
     /* USER CODE BEGIN 3 */
-
-
-
-	 /*
-	  * VERIFICAR ESTA PARTE, DADO QUE SI NO PUEDE INGRESAR AL 1ER CONDICIONAL NO VALE LA PENA QUE CUENTE
-	  * BUSCANDO CERRAR EL SOCKET
-//	  */
-//	  count++;
-//
-//	 if (count < 50000){
-//		 RetargetInit(socketNum, &serverIP);
-//		 count = 0;
-//	 }
-//	 if(count < 20000){
-//		  //CONDICIONAL: EVITA QUE ESTÉ SIEMPRE CONECTADO CON EL SERVIDOR
-//		  desconectar(socketNum);
-//		  HAL_Delay(500);
-//	 }
   }
   /* USER CODE END 3 */
 }
@@ -203,8 +256,8 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV2;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
@@ -398,7 +451,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4|GPIO_PIN_8, GPIO_PIN_RESET);
@@ -421,39 +474,57 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+
+void prendeLED(void){
+	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+}
+
+void apagaLED(void){
+	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+}
+
 void translate(char* msg, int8_t* rcv){
 	static uint8_t i, j;
 	j = 0;
 	for(i = 0 ; i < 9 ; i++ ){
-		while(j < 3){
-			if(msg[i] == '0'){
+
+			if(*(msg+i) == 48){
 				rcv[j] = 0;
 				j++;
 			}
-			if(msg[i] == '1') {
+			if(*(msg+i) == 49) {
 				rcv[j] = 1;
 				j++;
 			}
-			if(msg[i] == '2') {
+			if(*(msg+i) == 50) {
 				rcv[j] = 2;
 				j++;
 			}
-			if(msg[i] == '3') {
+			if(*(msg+i) == 51) {
 				rcv[j] = 3;
 				j++;
 			}
-			if(msg[i] == '-') {
-				rcv[j] = -1;
-				j++;
-				i++;
-			}
-		}
+			if(j == 3) i = 8;
+
+
 	}
 }
 
 void sirena (uint8_t _sirena){
-	if(_sirena == 1) HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-	if(_sirena == 0) HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+	if(_sirena == 1) HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+	if(_sirena == 0) HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+}
+
+
+void parpadea (void){
+	uint8_t i =0;
+	while(i < 5){
+		prendeLED();
+		HAL_Delay(50);
+		apagaLED();
+		HAL_Delay(50);
+		i++;
+	}
 }
 
 /* USER CODE END 4 */

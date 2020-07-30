@@ -9,14 +9,11 @@
 #define INC_SERVO_H_
 
 #include "stm32f1xx_hal.h"
-//
-//uint16_t i = 75;
-//uint16_t j = 75;
-		//ver si no tiene que ser de 32
+
 
 void initServo(TIM_HandleTypeDef* htim2, TIM_HandleTypeDef* htim3);
 void finishServo(TIM_HandleTypeDef* htim2, TIM_HandleTypeDef* htim3);
 
-void movServo(TIM_HandleTypeDef *ht, int8_t state, uint8_t channel);
+void movServo(TIM_HandleTypeDef *ht, uint8_t state, uint8_t channel);
 
 #endif /* INC_SERVO_H_ */

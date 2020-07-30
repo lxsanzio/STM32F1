@@ -52,8 +52,8 @@ void initClient(uint8_t socketNum, uint8_t* bufSize){
 	reg_wizchip_cs_cbfunc(cs_sel, cs_desel);
 	reg_wizchip_spi_cbfunc(spi_rb, spi_wb);
 	wizchip_init(bufSize, bufSize);
-	wiz_NetInfo netInfo = { .mac		= {0x00, 0x08, 0xdc, 0xab, 0xef}, //Mac Addres
-							.ip 		= {192, 168, 2, 192},
+	wiz_NetInfo netInfo = { .mac		= {0x00, 0x11, 0x08, 0xdc, 0xab, 0xef}, //Mac Addres
+							.ip 		= {192, 168, 2, 191},
 							.sn			= {255, 255, 255, 0},
 							.gw			= {192, 168, 2, 1} };
 	 do {
@@ -83,7 +83,7 @@ void initServer(uint8_t socketNum, uint8_t* bufSize){
 	reg_wizchip_cs_cbfunc(cs_sel, cs_desel);
 	reg_wizchip_spi_cbfunc(spi_rb, spi_wb);
 	wizchip_init(bufSize, bufSize);
-	wiz_NetInfo netInfo = { .mac		= {0x00, 0x08, 0xdc, 0xab, 0xff}, //Mac Addres
+	wiz_NetInfo netInfo = { .mac		= {0x00, 0x11, 0x08, 0xdc, 0xab, 0xff}, //Mac Addres
 							.ip 		= {192, 168, 2, 192},
 							.sn			= {255, 255, 255, 0},
 							.gw			= {192, 168, 2, 1} };
@@ -109,6 +109,24 @@ uint8_t estadoSocket(uint8_t socketNum){
 	len = getSn_RX_RSR(socketNum);
 	if (len > 0) 	return 1;
 	else 	return 0;
+}
+
+/*	@brief	Estado del cable
+ * 	@note	Función que determina la conexion del cable eth, en caso de que esté conectado
+ * 			enviará datos, de lo contrario pasa a estado close.
+ * 	@retval 	0: El cable se encuentra conectado y debe enviar y recibir datos.
+ * 				1: El cable eth se desconectó
+ */
+
+
+uint8_t estadoWire(void){
+	uint8_t phyLink = 0;
+	ctlwizchip(CW_GET_PHYLINK, (void*) &phyLink);
+	HAL_Delay(10);
+	if(phyLink == PHY_LINK_OFF){
+		return 1;
+	}
+	return 0;
 }
 
 /*
@@ -175,6 +193,7 @@ int8_t recibe(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP)
 	}
 	else{
 		close(socketNum);
+		HAL_Delay(100);
 		RetargetInit(socketNum, serverIP);
 	}
 	errno = EBADF;
@@ -202,12 +221,19 @@ int8_t recibe(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP)
  */
 
 uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP){
-	while((getSn_SR(socketNum) != SOCK_LISTEN) || (getSn_SR(socketNum) != SOCK_ESTABLISHED)){
-	if(socket(socketNum, Sn_MR_TCP, TCP_PORT, SF_TCP_NODELAY) == socketNum){
+	uint16_t server_port = 5001;
+	uint8_t statusSocket;
+
+
+	statusSocket = getSn_SR(socketNum);
+//	while((getSn_SR(socketNum) != SOCK_LISTEN) || (getSn_SR(socketNum) != SOCK_ESTABLISHED)){
+	while((statusSocket != 20)){// || (statusSocket != 23)){
+
+	if(socket(socketNum, Sn_MR_TCP, server_port, SF_TCP_NODELAY) == socketNum){
 		HAL_Delay(800);
-		if(serverIP != 0){
-			if(connect(socketNum,serverIP,TCP_PORT) == SOCK_OK)
-				return 1 ;
+		if(*serverIP != 0){
+			if(connect(socketNum,serverIP,server_port) == SOCK_OK)
+		return 1 ;
 			return 0;
 		}
 		else{

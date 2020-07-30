@@ -51,6 +51,8 @@ extern UART_HandleTypeDef huart1;
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
 
+
+
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
@@ -70,11 +72,15 @@ extern UART_HandleTypeDef huart1;
 #define WRONG_STATUS_MSG	 "Something went wrong; STATUS SOCKET: %d\r\n"
 #define WRONG_SENTVAL_MSG	 "Something went wrong; return value: %d\r\n"
 #define CONNECT_ERR_MSG		 "CONNECT Error!\r\n"
+#define INIT_VALUE			 "["
+#define FIN_VALUE			 "]"
 
 #define TCP_PORT 5001
 
-#define PRINT_STR(msg) do  {										\
-  HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), 100);		\
+#define PRINT_STR(msg) do  {										 			\
+	HAL_UART_Transmit(&huart1, (uint8_t*)INIT_VALUE, strlen(INIT_VALUE), 100);	\
+	HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), 100);				\
+	HAL_UART_Transmit(&huart1, (uint8_t*)FIN_VALUE, strlen(FIN_VALUE), 100);	\
 } while(0)
 
 #define PRINT_HEADER() do  {													\

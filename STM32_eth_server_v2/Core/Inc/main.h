@@ -29,10 +29,6 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -40,6 +36,16 @@ extern "C" {
 #include "w5500.h"
 #include "socket.h"
 
+/*  COMPILAR Y LUEDO DESCOMENTAR
+ *
+ *
+ */
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <string.h>
+
+#include <stdbool.h>
 
 #include "conectar.h"
 #include "servo.h"
@@ -69,18 +75,29 @@ extern UART_HandleTypeDef huart1;
 #define NETMASK_MSG	         "  NETMASK:     %d.%d.%d.%d\r\n"
 #define GW_MSG 		 		 "  GATEWAY:     %d.%d.%d.%d\r\n"
 #define MAC_MSG		 		 "  MAC ADDRESS: %x:%x:%x:%x:%x:%x\r\n"
-#define GREETING_MSG 		 "Well done guys! Welcome to the IoT world. Bye!\r\n"	//no hace falta
+#define GREETING_MSG 		 "\nWell done guys! Welcome to the IoT world. Bye!\r\n"	//no hace falta
 #define CONN_ESTABLISHED_MSG "Connection established with remote IP: %d.%d.%d.%d:%d\r\n"
 #define SENT_MESSAGE_MSG	 "Se envio el msj.\r\n"
 #define WRONG_RETVAL_MSG	 "Something went wrong; return value: %d\r\n"
 #define WRONG_STATUS_MSG	 "Something went wrong; STATUS SOCKET: %d\r\n"
 #define WRONG_SENTVAL_MSG	 "Something went wrong; return value: %d\r\n"
 #define CONNECT_ERR_MSG		 "CONNECT Error!\r\n"
+#define STATUS_SOCKET_SERVER "STATUS SOCKET: %d\r\n"
+#define INIT_VALUE			 "["
+#define FIN_VALUE			 "]\r"
+#define VALUE				 "[%d,%d,%d]\n"
 
 #define TCP_PORT 5001
 
-#define PRINT_STR(msg) do  {										\
-  HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), 100);		\
+#define PRINT_STR(msg) do  {										 			\
+	HAL_UART_Transmit(&huart1, (uint8_t*)INIT_VALUE, strlen(INIT_VALUE), 100);	\
+	HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), 100);				\
+	HAL_UART_Transmit(&huart1, (uint8_t*)FIN_VALUE, strlen(FIN_VALUE), 100);	\
+} while(0)
+
+#define PRINT_VALUE(value) do  {										 		\
+	sprintf(msg,VALUE,value[0],value[1],value[2]);								\
+	HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), 100);				\
 } while(0)
 
 #define PRINT_HEADER() do  {													\
@@ -118,9 +135,18 @@ extern UART_HandleTypeDef huart1;
 	HAL_UART_Transmit(&huart1,(uint8_t*)msg,strlen(msg),100);						\
 } while(0)
 
+#define PRINT_STATUS_SOCK_SERVER(_state) do{											\
+	sprintf(msg, STATUS_SOCKET_SERVER, _state);											\
+	HAL_UART_Transmit(&huart1,(uint8_t*)msg,strlen(msg),100);						\
+} while(0)
+
 
 #define PRINT_OK() do	{																			\
 	HAL_UART_Transmit(&huart1, (uint8_t*)SENT_MESSAGE_MSG, (uint16_t)strlen(SENT_MESSAGE_MSG),100);	\
+} while (0)
+
+#define PRINT_OK2() do	{																			\
+	HAL_UART_Transmit(&huart1, (uint8_t*)GREETING_MSG, (uint16_t)strlen(GREETING_MSG),100);	\
 } while (0)
 
 char msg[60];
