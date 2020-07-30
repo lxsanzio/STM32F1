@@ -72,6 +72,7 @@ void translate (char *msg, uint8_t *rcv);
 void parpadea (void);
 void sirenaLoca(void);
 
+void toggleFlag(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -80,8 +81,10 @@ void sirenaLoca(void);
 uint16_t VR[2];
 uint8_t socketNum = 0;
 
-static bool estadoP = false;
+
 uint8_t _sirena;
+enum _estadoPa{sINIT, sFINISH, sWORK, sERROR, sCLOSE} estadoP;
+
 
 /* USER CODE END 0 */
 
@@ -94,25 +97,30 @@ int main(void)
 	/*
 	 * VARIABLES PARA DEFINICION DE CONEXION TCP
 	 */
-
 	uint8_t bufSize[] = {2, 0, 0, 0, 0, 0, 0, 0};
-
 	uint8_t serverIP[4] = {192, 168, 2, 192};
+	char bufmsg[60];
 
+//	uint8_t recv;				//VARIABLE QUE SE USÓ UNA VEZ PARA LO QUE SE RECIBE DEL SERVIDOR
 //	uint16_t count = 0;
+	/*
+	 * VARIABLES QUE INTERACTUAN EN LO QUE SE VA A ENVIAR
+	 * */
 	int8_t _stateJoyX;
 	int8_t _stateJoyY;
-	uint8_t recv;
+
 	uint8_t snd[3];
-	char bufmsg[60];
-	int8_t stateTx;
-	int8_t stateRx;
-	int8_t stateSocket;
-	uint8_t stateRetarget;
 
-//	int8_t _state;			No hace falta se creo para el sistema las alerta UART
+	/*
+	 * VARIABLES QUE SE USARÍAN PARA LA CAPA INTERACTIVA DEL MODULO
+	 */
+//	int8_t stateTx;
+//	int8_t stateRx;
+//	int8_t stateSocket;
+//	uint8_t stateRetarget;
 
-	//AGREGAR uint8_t *bufData!!!
+	//VARIABLES DE ESTADO DE FUNCIONAMIENTO PROGRAMA
+	bool estadoPi = false;
 
 
   /* USER CODE END 1 */
@@ -123,7 +131,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -139,8 +146,6 @@ int main(void)
   MX_ADC1_Init();
   MX_SPI1_Init();
   MX_USART1_UART_Init();
-
-
   /* USER CODE BEGIN 2 */
 
   PRINT_HEADER();
@@ -148,11 +153,9 @@ int main(void)
    * Inicializo modulo cliente
    */
   initClient(socketNum, bufSize);
-
   apagaLED();
-
-  _sirena = 0;
-
+  _sirena = 0;			//LLEVARLO A OTRO LADO
+  estadoP = sCLOSE;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -160,43 +163,75 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
-	  	  while(estadoP == true){
-		  __NOP();
-
-		  switch(getSn_SR(socketNum)){
-		  	  case SOCK_INIT:
-		  		  HAL_Delay(500);
-		  		  connect(socketNum, serverIP,TCP_PORT);
-		  		  break;
-		  	  case SOCK_ESTABLISHED:
-		  		  HAL_Delay(500);
-		  	  	  _stateJoyX = stateJoysticks(VR[0]);
-				  _stateJoyY = stateJoysticks(VR[1]);
-				  snd[0] = _stateJoyX;
-				  snd[1] = _stateJoyY;
-				  snd[2] = _sirena;
-				  sprintf(bufmsg,"%d,%d,%d",snd[0],snd[1],snd[2]);
-				  /*
-				  * @retval		-1: Bad File Number 'val = 9'
-				  * 			0: Se envio el paquete completo.
-				  * 			EIO: Hubo un error de I/O valor , errno = 5
-				  */
-
-				  //mostrar lo que se va a enviar.
-				  PRINT_STR(bufmsg);
-				  send(socketNum,(uint8_t*)bufmsg,strlen(bufmsg));
-
+	  	  switch(estadoP){
+			  case sINIT:
+				  if(estadoPi == false){
+					  initJoystick(&hadc1,VR);
+					  prendeLED();
+					  estadoPi = true;
+					  estadoP = sWORK;
+				  }
+				  else estadoP += 1;
 				  break;
-		  	  case SOCK_CLOSE_WAIT:
-		  		  HAL_Delay(500);
-		  		  close(socketNum);
-		  		  break;
-		  	  case SOCK_CLOSED:
-		  		  HAL_Delay(500);
-		  		  socket(socketNum,Sn_MR_TCP,TCP_PORT,SF_TCP_NODELAY);
 
-		  		  break;
+			  case sFINISH:
+				  finJoystick(&hadc1);
+				  apagaLED();
+				  estadoPi = false;
+				  estadoP = sCLOSE;
+				  break;
+
+
+			  case sWORK:
+	  //EMPIEZA 2DO SWITCH FUNCIONAMIENTO
+				  __NOP();
+				  if(estadoWire() == 1)	estadoP = sERROR;
+				  switch(getSn_SR(socketNum)){
+				  	  case SOCK_INIT:
+				  		  HAL_Delay(50);
+				  		  connect(socketNum, serverIP,TCP_PORT);
+				  		  break;
+				  	  case SOCK_ESTABLISHED:
+				  		  HAL_Delay(50);
+				  	  	  _stateJoyX = stateJoysticks(VR[0]);
+						  _stateJoyY = stateJoysticks(VR[1]);
+						  snd[0] = _stateJoyX;
+						  snd[1] = _stateJoyY;
+						  snd[2] = _sirena;
+						  sprintf(bufmsg,"%d,%d,%d",snd[0],snd[1],snd[2]);
+						  //mostrar lo que se va a enviar.
+						  PRINT_STR(bufmsg);
+						  send(socketNum,(uint8_t*)bufmsg,strlen(bufmsg));
+
+						  break;
+				  	  case SOCK_CLOSE_WAIT:
+				  		  HAL_Delay(50);
+				  		  close(socketNum);
+				  		  break;
+				  	  case SOCK_CLOSED:
+				  		  HAL_Delay(50);
+				  		  socket(socketNum,Sn_MR_TCP,TCP_PORT,SF_TCP_NODELAY);
+
+				  		  break;
+				  }
+				  break;
+				  //TERMINA 2DO SWITCH DE FUNCIONAMIENTO
+
+			  case sERROR:
+				  parpadea();
+				  if(estadoWire() == 0) estadoP = sWORK;
+				  break;
+
+
+
+			  case sCLOSE:
+				  __NOP();
+				  break;
+
+
+	  	  }
+
+//	  	  while(estadoPi == true){
 
 //
 //		 if((stateRetarget = RetargetInit(socketNum,serverIP)) == 1){
@@ -236,13 +271,13 @@ int main(void)
 //		 else PRINT_FAIL_STATUS_SOCK(stateRetarget);
 //		 HAL_Delay(80);
 
-		 recv = 0; //reinicia variable recibida. CReo innecesaria.
+//		 recv = 0; //reinicia variable recibida. CReo innecesaria.
 
 
 
 
 
-		  }
+
 //		 count++;
 //
 //		 if(count > 200000){
@@ -257,7 +292,7 @@ int main(void)
 
 
     /* USER CODE BEGIN 3 */
-  }
+//  }
   /* USER CODE END 3 */
 
 
@@ -485,7 +520,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : PB12 PB15 */
   GPIO_InitStruct.Pin = GPIO_PIN_12|GPIO_PIN_15;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
@@ -511,7 +546,14 @@ static void MX_GPIO_Init(void)
  */
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+	/*
+	 * EN LA LLAMADA A LA INTERRUPCION SE TIENE QUE PONER POCO CODIGO
+	 */
+
 	if(GPIO_Pin == GPIO_PIN_12){			//A COMPLETAR CON FUNCION, RECORDAR FLAG QUE CONDICIONA PIN_13
+
+		toggleFlag();
+
 
 //		switch(estadoP){
 //		case false:
@@ -527,22 +569,22 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 //			apagaLED();
 //			break;
 //		}
-		if(estadoP == false){
-			initJoystick(&hadc1,VR);
-			estadoP = true;
-			prendeLED();
+//		if(estadoP == false){
+//			initJoystick(&hadc1,VR);
+//			estadoP = true;
+//			prendeLED();
+//
+//		}
+//		else{
+//			finJoystick(&hadc1);
+//			estadoP = false;
+//			apagaLED();
+//			desconectar(socketNum);
 
-		}
-		else{
-			finJoystick(&hadc1);
-			estadoP = false;
-			apagaLED();
-			desconectar(socketNum);
-		}
 	}
 	//AL PRECIONAR EL BOTON DE SIRENA SE SETEA EN ACTIVO LA VARIABLE
 	if(GPIO_Pin == GPIO_PIN_15){
-		if(estadoP == true){
+		if(estadoP == sWORK){
 			sirenaLoca();
 //		if(_sirena == 0) _sirena = 1;
 //		if(_sirena == 1) _sirena = 0;
@@ -551,8 +593,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 }
 
 
-
-
+/*
+ *
+ *
+ *
+ */
+void toggleFlag(void){
+	estadoP = sINIT;
+}
 
 
 void prendeLED(void){

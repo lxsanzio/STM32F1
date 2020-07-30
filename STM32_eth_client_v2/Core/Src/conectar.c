@@ -114,6 +114,25 @@ int8_t estadoSocket(uint8_t socketNum){  //cambiar a entero con signo
 }
 
 
+/*	@brief	Estado del cable
+ * 	@note	Función que determina la conexion del cable eth, en caso de que esté conectado
+ * 			enviará datos, de lo contrario pasa a estado close.
+ * 	@retval 	0: El cable se encuentra conectado y debe enviar y recibir datos.
+ * 				1: El cable eth se desconectó
+ */
+
+
+uint8_t estadoWire(void){
+	uint8_t phyLink = 0;
+	ctlwizchip(CW_GET_PHYLINK, (void*) &phyLink);
+	HAL_Delay(10);
+	if(phyLink == PHY_LINK_OFF){
+		return 1;
+	}
+	return 0;
+}
+
+
 /*
  * @brief	Recargador de Inicio
  * @param	socketNum: entero sin signo que identifica el socket del modulo

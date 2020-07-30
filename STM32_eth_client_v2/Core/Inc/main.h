@@ -51,6 +51,8 @@ extern UART_HandleTypeDef huart1;
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
 
+
+
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

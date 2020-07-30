@@ -64,12 +64,14 @@ static void MX_USART1_UART_Init(void);
 
 void translate(char* msg, int8_t* rcv);
 void sirena (uint8_t _sirena);
+void parpadea (void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
 uint8_t socketNum = 0;
+enum _estadoPa {sINIT, sFINISH, sWORK, sERROR, sCLOSE} estadoP;
 
 /* USER CODE END 0 */
 
@@ -82,7 +84,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
 	uint8_t bufSize[] = {16, 0, 0, 0, 0, 0, 0, 0};
-	uint8_t serverIP = 0;
+//	uint8_t serverIP = 0;
 
 	uint16_t count = 0;
 	int8_t _stateJoyX;
@@ -96,6 +98,8 @@ int main(void)
 	uint8_t stateRetarget;
 	uint8_t statusSocket;
 	uint16_t len;
+
+	bool estadoPi = false;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -125,49 +129,80 @@ int main(void)
   PRINT_HEADER();
 
   initServer(socketNum, bufSize);
-  initServo(&htim2,&htim3);
+//  initServo(&htim2,&htim3);
+
+  estadoP = sCLOSE;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1) {
     /* USER CODE END WHILE */
-	 __NOP();
-	  switch(getSn_SR(socketNum)){
-	  case SOCK_INIT:
-		  HAL_Delay(500);
-		  listen(socketNum);
-		  break;
-	  case SOCK_ESTABLISHED:
-		  HAL_Delay(500);
-		  len = getSn_RX_RSR(socketNum);
-		  if(len >0){
-			  recv(socketNum,bufmsg,len);
+	  switch(estadoP){
 
+	  case sINIT:
+		  if(estadoPi == false){
+			 initServo(&htim2,&htim3);
+			 estadpPi = true;
+			 estadoP = sWORK;
+			 parpadea();
 		  }
-		  translate(bufmsg,rcv);
-
-
-		 _stateJoyX = rcv[0];
-		 _stateJoyY = rcv[1];
-		 _stateSirena = rcv[2];
-		 movServo(&htim2,_stateJoyX,1);
-		 movServo(&htim3,_stateJoyY,2);
-		 sirena(_stateSirena);
-		 PRINT_STR(bufmsg);
-		 PRINT_VALUE(rcv);
-//		 PRINT_OK2();
-
+		  else estadoP += 1;
 		  break;
-	  case SOCK_CLOSE_WAIT:
-		  HAL_Delay(500);
-		  close(socketNum);
-		  break;
-	  case SOCK_CLOSED:
-		  HAL_Delay(500);
-		  socket(socketNum,Sn_MR_TCP,TCP_PORT,SF_TCP_NODELAY);
 
+	  case sFINISH:
+		  finishServo(&htim2,&htim3);
+		  apagaLED();
+		  estadoPi = false;
+		  estadoP = sCLOSE;
 		  break;
+
+	  //EMPIEZA 2DO SWITCH FUNCIONAMIENTO MODULO
+	  case sWORK:
+	  	  __NOP();
+		  if(esadoWire() == 1) estadoP = sERROR;
+		  switch(getSn_SR(socketNum)){
+			  case SOCK_INIT:
+				  HAL_Delay(50);
+				  listen(socketNum);
+				  break;
+			  case SOCK_ESTABLISHED:
+				  HAL_Delay(50);
+				  len = getSn_RX_RSR(socketNum);
+				  if(len >0){
+					  recv(socketNum,bufmsg,len);
+				  }
+				  translate(bufmsg,rcv);
+				  _stateJoyX = rcv[0];
+				  _stateJoyY = rcv[1];
+				  _stateSirena = rcv[2];
+				  movServo(&htim2,_stateJoyX,1);
+				  movServo(&htim3,_stateJoyY,2);
+				  sirena(_stateSirena);
+				  PRINT_STR(bufmsg);
+				  PRINT_VALUE(rcv);
+				  break;
+			  case SOCK_CLOSE_WAIT:
+				  HAL_Delay(50);
+				  close(socketNum);
+				  break;
+			  case SOCK_CLOSED:
+				  HAL_Delay(50);
+				  socket(socketNum,Sn_MR_TCP,TCP_PORT,SF_TCP_NODELAY);
+
+				  break;
+		  }
+		  break;
+
+	  case sERROR:
+		  parpadea();
+		  if(estadoWire() == 0) estadoP = sWORK;
+		  break;
+
+	  case sCLOSE:
+		  __NOP();
+		  break;
+	  }
 //
 //	  if((stateRetarget = RetargetInit(socketNum,&serverIP)) == 1){
 ////		  if((stateRx = estadoSocket(socketNum)) == 1){
@@ -219,7 +254,9 @@ int main(void)
 //		  desconectar(socketNum);
 //		  HAL_Delay(500);
 //	 }
-  }
+
+
+	  }
   /* USER CODE END 3 */
 }
 }
@@ -498,6 +535,18 @@ void translate(char* msg, int8_t* rcv){
 void sirena (uint8_t _sirena){
 	if(_sirena == 1) HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
 	if(_sirena == 0) HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+}
+
+
+void parpadea (void){
+	uint8_t i =0;
+	while(i < 5){
+		apagaLED();
+		HAL_Delay(50);
+		prendeLED();
+		HAL_Delay(50);
+		i++;
+	}
 }
 
 /* USER CODE END 4 */
