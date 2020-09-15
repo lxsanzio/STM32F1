@@ -140,7 +140,7 @@ uint8_t estadoWire(void){
  * @retval -1: Bad File Number 'val = 9'
  * 			0: Se envio el paquete completo.
  * 			EIO: Hubo un error de I/O valor 'errno = 5'
- *
+ * @note	NO SE ENCUENTRA EN USO
  */
 
 int8_t envia(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP){
@@ -180,6 +180,7 @@ int8_t envia(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP){
  * @retval  -1: Salio mal algo al intentar recibir.
  * 			EIO: Error de I/O. val. '5'
  * 			0: si se envio correctamente.
+ * @note	NO SE ENCUENTRA EN USO
  */
 int8_t recibe(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP){
 	if(getSn_SR(socketNum) == SOCK_ESTABLISHED){
@@ -218,6 +219,7 @@ int8_t recibe(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP)
  * 			- Necesita el modulo un tiempo
  * 			- Si es cliente y se debe conectar a un servidor. Si se conecta devuelve SOCK_ESTABLISHED.
  * 			- En caso de ser servidor debe incializar el socket y luego quedar en modo 'listen'
+ * @note	NO SE ENCUENTRA EN USO
  */
 
 uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP){
@@ -248,29 +250,20 @@ uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP){
 }
 
 
+
 /*
- * @brief	Inicializador del servidor
+ * @brief	Desconectar socket
  * @param	socketNum: entero sin signo que identifica el socket del modulo
  * 					   el modulo W5500 puede manejar hasta 8 socket en simultaneo
- * 			bufSize: array de entero. Se determina la cantidad de memoria al stack.
- * 					 el modulo w5500 tiene stack, que de hasta 16Kb de memoria maximo
- * 					 de asignación total entre la suma de los socket.
- * @note	-El bufer asignado a cada socket va de 0 a 16 Kb, sin embargo, la suma
- * 			total de los sockets debe ser menor o igual a 16Kb.
- * 			El modulo w5500 tiene stack, que de hasta 16Kb de memoria maximo
- * 			de asignación total entre la suma de los socket.
  */
-
-
-  /*
-   * Documentación del modulo W5500
-   * http://wizwiki.net/wiki/doku.php/products:w5500:application:tcp_function
-   */
-
-
 void desconectar(uint8_t socketNum){
   disconnect(socketNum);
   close(socketNum);
 
 }
 
+
+/*
+ * Documentación del modulo W5500
+ * http://wizwiki.net/wiki/doku.php/products:w5500:application:tcp_function
+ */

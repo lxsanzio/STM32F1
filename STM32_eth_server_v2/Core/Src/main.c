@@ -186,7 +186,17 @@ int main(void)
 			  		  HAL_Delay(50);
 			  		  len = getSn_RX_RSR(socketNum);
 					  if(len > 0) {
-						  recv(socketNum, bufmsg, len);		//problema con esta funcion se me despelotan los contadores
+						  recv(socketNum, bufmsg, len);
+/*
+* problema con esta funcion se me despelotan los contadores
+* VERIFICAR:
+* 	- porque se modifican contadores count y count2. (Ver la definicion de sus variables)
+* 	- Funcion recv() bufmsg es un puntero a un entero sin signo OJO! (ver). Quizas
+* 	  conviene usar un array entero.
+* @note: en bitacora tengo asentado que se modificaron variables contadoras como static.
+* 		Lo que provocaría que al salir de contexto de ejecución se mantiene el valor en
+* 		mem. Igualmente se recomienda indagar en Warning.
+*/
 						  translate(bufmsg,rcv);
 //						  _stateJoyX = bufmsg2[0];
 //						  _stateJoyY = bufmsg2[1];

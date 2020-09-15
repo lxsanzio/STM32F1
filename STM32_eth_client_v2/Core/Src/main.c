@@ -202,6 +202,14 @@ int main(void)
 						  //mostrar lo que se va a enviar.
 						  PRINT_STR(bufmsg);
 						  send(socketNum,(uint8_t*)bufmsg,strlen(bufmsg));
+						  /*
+						   * Probar enviando el array entero y debuguear el servidor.
+						   * note: En su momento el compilador arrojó un warning por
+						   * incompatibilidad de tipo o falta de casteo. El problema
+						   * es que entiendo que la funcion sprintf asigna en bufmsg
+						   * valores quedando una variable "cont char .." y no un "char"
+						   * comun y sivestre. Es para pensar!!
+						   */
 
 						  break;
 				  	  case SOCK_CLOSE_WAIT:
@@ -509,11 +517,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 }
 
 
-/*
- *
- *
- *
- */
 void toggleFlag(void){
 	estadoP = sINIT;
 }
