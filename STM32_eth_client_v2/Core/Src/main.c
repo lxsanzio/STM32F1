@@ -202,6 +202,14 @@ int main(void)
 						  //mostrar lo que se va a enviar.
 						  PRINT_STR(bufmsg);
 						  send(socketNum,(uint8_t*)bufmsg,strlen(bufmsg));
+						  /*
+						   * Probar enviando el array entero y debuguear el servidor.
+						   * note: En su momento el compilador arrojó un warning por
+						   * incompatibilidad de tipo o falta de casteo. El problema
+						   * es que entiendo que la funcion sprintf asigna en bufmsg
+						   * valores quedando una variable "cont char .." y no un "char"
+						   * comun y sivestre. Es para pensar!!
+						   */
 
 						  break;
 				  	  case SOCK_CLOSE_WAIT:
@@ -231,68 +239,11 @@ int main(void)
 
 	  	  }
 
-//	  	  while(estadoPi == true){
-
-//
-//		 if((stateRetarget = RetargetInit(socketNum,serverIP)) == 1){
-//			 HAL_Delay(50);
-//			  _stateJoyX = stateJoysticks(VR[0]);
-//			  _stateJoyY = stateJoysticks(VR[1]);
-//			  snd[0] = _stateJoyX;
-//			  snd[1] = _stateJoyY;
-//			  snd[2] = _sirena;
-//			  sprintf(bufmsg,"%d,%d,%d",snd[0],snd[1],snd[2]);
-//			  /*
-//			  * @retval		-1: Bad File Number 'val = 9'
-//			  * 			0: Se envio el paquete completo.
-//			  * 			EIO: Hubo un error de I/O valor , errno = 5
-//			  */
-//
-//			  //mostrar lo que se va a enviar.
-//			  PRINT_STR(bufmsg);
-//			  if((stateTx = envia(socketNum, bufmsg, (uint8_t)strlen(bufmsg), serverIP)) == 0){
-//				  PRINT_OK();
-//			  }
-//			  else{
-//				  PRINT_FAIL_TX(stateTx);					  //VISUALIZAR ERROR POR USART
-//			  }
-//			  if((stateSocket = estadoSocket(socketNum)) == 1){		//HAY DATOS EN EL STACK
-//				  if((stateRx = recibe(socketNum, bufmsg, (uint8_t)strlen(bufmsg),serverIP)) == 0){
-//					  translate(bufmsg,&recv);
-//					  if(recv == 1) parpadea();
-//				  }
-//				  else{
-//					  PRINT_FAIL_RX(stateRx);				//MOSTRAR POR USART EL PROBLEMA DADO POR stateRx
-//				  }
-//			  }
-//			  else
-//				  PRINT_FAIL_STATUS_SOCK(stateSocket);
-//		 }
-//		 else PRINT_FAIL_STATUS_SOCK(stateRetarget);
-//		 HAL_Delay(80);
-
-//		 recv = 0; //reinicia variable recibida. CReo innecesaria.
-
-
-
-
-
-
-//		 count++;
-//
-//		 if(count > 200000){
-//			  //CONDICIONAL: EVITA QUE ESTÉ SIEMPRE CONECTADO CON EL SERVIDOR
-//			  desconectar(socketNum);
-//			  count = 0;
-//			  estadoP = false;
-//			  apagaLED();
-//			  HAL_Delay(500);
-//		 }
 	  }
 
 
     /* USER CODE BEGIN 3 */
-//  }
+
   /* USER CODE END 3 */
 
 
@@ -555,49 +506,17 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 		toggleFlag();
 
 
-//		switch(estadoP){
-//		case false:
-//			HAL_Delay(10);
-//			initJoystick(&hadc1,VR);
-//			estadoP = true;
-//			prendeLED();
-//			break;
-//		case true:
-//			HAL_Delay(10);
-//			finJoystick(&hadc1);
-//			estadoP = false;
-//			apagaLED();
-//			break;
-//		}
-//		if(estadoP == false){
-//			initJoystick(&hadc1,VR);
-//			estadoP = true;
-//			prendeLED();
-//
-//		}
-//		else{
-//			finJoystick(&hadc1);
-//			estadoP = false;
-//			apagaLED();
-//			desconectar(socketNum);
 
 	}
 	//AL PRECIONAR EL BOTON DE SIRENA SE SETEA EN ACTIVO LA VARIABLE
 	if(GPIO_Pin == GPIO_PIN_15){
 		if(estadoP == sWORK){
 			sirenaLoca();
-//		if(_sirena == 0) _sirena = 1;
-//		if(_sirena == 1) _sirena = 0;
 		}
 	}
 }
 
 
-/*
- *
- *
- *
- */
 void toggleFlag(void){
 	estadoP = sINIT;
 }

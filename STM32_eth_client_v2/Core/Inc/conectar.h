@@ -35,6 +35,8 @@ void initServer(uint8_t socketNum, uint8_t* bufSize);
 
 int8_t estadoSocket(uint8_t socketNum);
 uint8_t estadoWire(void);
+
+//RETARGET, ENVIA Y RECIBE NO SE ESTAN USANDO
 uint8_t RetargetInit (uint8_t socketNum, uint8_t* serverIP);
 
 int8_t envia(uint8_t socketNum, char* pbufData, uint8_t len, uint8_t* serverIP);
